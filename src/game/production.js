@@ -1,0 +1,111 @@
+import { Decimal } from './Decimal';
+
+const OFFLINE_CHUNK_MS = 10000;
+const MAX_OFFLINE_MS = 30 * 24 * 60 * 60 * 1000;
+
+export function processOfflineWithBreakdown(gameState, elapsedMs) {
+  const generators = gameState.generators;
+  const lettersBefore = new Decimal(gameState.letters.toString());
+  const scribesBefore = gameState.scribes ? new Decimal(gameState.scribes.toString()) : new Decimal(0);
+  const countsBefore = new Map();
+  for (const gen of generators) {
+    countsBefore.set(gen.name, new Decimal(gen.count.toString()));
+  }
+
+  let remaining = Math.min(Math.max(0, elapsedMs), MAX_OFFLINE_MS);
+  while (remaining > 0) {
+    const chunk = Math.min(OFFLINE_CHUNK_MS, remaining);
+    const result = updateProduction(gameState, chunk);
+    gameState.letters = result.letters;
+    gameState.generatorCycleProgress = result.generatorCycleProgress;
+    gameState.generatorAccumulators = result.generatorAccumulators;
+    gameState.scribes = result.scribes;
+    remaining -= chunk;
+  }
+
+  gameState.lastActiveTime = Date.now();
+
+  const lettersProduced = gameState.letters.minus(lettersBefore);
+  const scribesProduced = gameState.scribes.minus(scribesBefore);
+  const generatorProduced = {};
+  for (const gen of generators) {
+    const delta = gen.count.minus(countsBefore.get(gen.name));
+    if (delta.gt(0)) {
+      generatorProduced[gen.name] = delta;
+    }
+  }
+
+  return { lettersProduced, generatorProduced, scribesProduced };
+}
+
+const ESCRIBAS_PER_SECOND = 1;
+
+export function updateProduction(gameState, deltaTime) {
+  const generatorGains = new Map();
+  let lettersProduced = new Decimal(0);
+  const newCycleProgress = new Map(gameState.generatorCycleProgress || []);
+
+  const palavras = gameState.generators.find(g => g.level === 1);
+  const hasPalavras = palavras && palavras.count.gte(1);
+  const scribesGain = hasPalavras ? new Decimal(deltaTime / 1000).mul(ESCRIBAS_PER_SECOND) : new Decimal(0);
+  const newScribes = (gameState.scribes || new Decimal(0)).plus(scribesGain);
+
+  for (const gen of gameState.generators) {
+    const cycleProgress = newCycleProgress.get(gen.name) ?? 0;
+    const result = gen.produce(deltaTime, cycleProgress);
+    if (!result) continue;
+
+    newCycleProgress.set(gen.name, result.cycleProgress);
+
+    if (result.amount.lte(0)) continue;
+
+    if (result.type === 'letters') {
+      lettersProduced = lettersProduced.plus(result.amount);
+    } else if (result.type === 'generator') {
+      const key = result.generator.name;
+      const current = generatorGains.get(key) || new Decimal(0);
+      generatorGains.set(key, current.plus(result.amount));
+    }
+  }
+
+  const newLetters = gameState.letters.plus(lettersProduced);
+
+  const newAccumulators = new Map(gameState.generatorAccumulators);
+
+  for (const [name, amount] of generatorGains) {
+    const gen = gameState.generators.find(g => g.name === name);
+    if (gen && amount.gt(0)) {
+      const prevAcc = newAccumulators.get(name) || new Decimal(0);
+      const total = prevAcc.plus(amount);
+      const whole = total.floor();
+      if (whole.gt(0)) {
+        gen.count = gen.count.plus(whole);
+        newAccumulators.set(name, total.sub(whole));
+      } else {
+        newAccumulators.set(name, total);
+      }
+    }
+  }
+
+  return {
+    letters: newLetters,
+    generatorCycleProgress: newCycleProgress,
+    generatorAccumulators: newAccumulators,
+    scribes: newScribes,
+  };
+}
+
+export function getLettersPerSecond(generators) {
+  const palavras = generators.find(g => g.level === 1);
+  if (!palavras) return new Decimal(0);
+  return palavras.getEffectivePerSecond();
+}
+
+export function isGeneratorAutomated(generators, gen) {
+  return generators.some(g => g.produces === gen && g.count.gt(0));
+}
+
+export function getProducerName(generators, gen) {
+  const producer = generators.find(g => g.produces === gen && g.count.gt(0));
+  return producer ? producer.name : null;
+}
