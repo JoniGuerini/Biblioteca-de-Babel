@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameState } from './useGameState';
-import { saveGame } from '../game';
 
 const TARGET_FPS = 60;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
 export function useGameLoop() {
-  const { stateRef, generatorsRef, updateProduction, updateDisplay, lastSaveTimeRef, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS } = useGameState();
+  const { stateRef, generatorsRef, updateProduction, updateDisplay, lastSaveTimeRef, saveGameWithTimestamp, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS } = useGameState();
   const lastFrameTimeRef = useRef(performance.now());
   const accumulatorRef = useRef(0);
   const lastUIUpdateRef = useRef(0);
@@ -48,7 +47,7 @@ export function useGameLoop() {
 
       if (Date.now() - lastSaveTimeRef.current >= SAVE_INTERVAL_MS) {
         lastSaveTimeRef.current = Date.now();
-        saveGame({ ...stateRef.current, generators: generatorsRef.current });
+        saveGameWithTimestamp();
       }
 
       if (currentTime - lastUIUpdateRef.current >= UI_UPDATE_INTERVAL_MS) {
@@ -60,7 +59,7 @@ export function useGameLoop() {
 
     rafId = requestAnimationFrame(gameLoop);
     return () => cancelAnimationFrame(rafId);
-  }, [stateRef, generatorsRef, updateProduction, updateDisplay, lastSaveTimeRef, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS]);
+  }, [stateRef, generatorsRef, updateProduction, updateDisplay, lastSaveTimeRef, saveGameWithTimestamp, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS]);
 
   return { fps };
 }

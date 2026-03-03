@@ -18,12 +18,20 @@ export function saveGame(gameState) {
     for (const [name, progress] of gameState.generatorCycleProgress || []) {
       cycleProgressObj[name] = progress;
     }
+    const generatorMilestonesObj = {};
+    if (gameState.generatorMilestones) {
+      for (const [name, index] of gameState.generatorMilestones) {
+        generatorMilestonesObj[name] = index;
+      }
+    }
     const save = {
       letters: gameState.letters.toString(),
       scribes: (gameState.scribes || new Decimal(0)).toString(),
       generators: generatorsObj,
       accumulators: accumulatorsObj,
       cycleProgress: cycleProgressObj,
+      favor: (gameState.favor || new Decimal(0)).toString(),
+      generatorMilestones: generatorMilestonesObj,
       lastSaveTime: Date.now(),
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(save));
@@ -66,7 +74,15 @@ export function loadGame(generators) {
     }
 
     const scribes = save.scribes != null ? new Decimal(save.scribes) : new Decimal(1);
-    return { letters, generatorCycleProgress, scribes, generatorAccumulators, lastSaveTime: save.lastSaveTime };
+    const favor = save.favor != null ? new Decimal(save.favor) : new Decimal(0);
+    const generatorMilestones = new Map();
+    if (save.generatorMilestones) {
+      for (const [name, index] of Object.entries(save.generatorMilestones)) {
+        const newName = NAME_MAP[name] || name;
+        generatorMilestones.set(newName, typeof index === 'number' ? index : parseInt(index, 10));
+      }
+    }
+    return { letters, generatorCycleProgress, scribes, generatorAccumulators, favor, generatorMilestones, lastSaveTime: save.lastSaveTime };
   } catch (e) {
     console.warn('Erro ao carregar save:', e);
     return null;

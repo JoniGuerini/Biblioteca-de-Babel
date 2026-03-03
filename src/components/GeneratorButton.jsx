@@ -12,7 +12,7 @@ export function GeneratorButton({ data }) {
   }
   prevProgressRef.current = progress;
 
-  const costText = data.producerName
+  const costText = data.purchaseLocked && data.producerName
     ? `Produzido por ${data.producerName}`
     : data.prevName
       ? `${data.cost} Letras + ${data.prevRequired} ${data.prevName} + ${data.scribesRequired} Escribas`
@@ -48,10 +48,12 @@ export function GeneratorButton({ data }) {
               />
             </div>
             <div className="generator-footer">
-              <span className="generator-cost">{costText}</span>
+              <span className={`generator-cost ${!data.purchaseLocked && !data.canAfford ? 'generator-cost-insufficient' : ''}`}>
+                {costText}
+              </span>
               <span className="generator-count">
                 ×{data.count}
-                {buyMode !== '1x' && data.canBuy > 0 && (
+                {buyMode !== '1x' && data.canBuy > 0 && !data.purchaseLocked && (
                   <span className="generator-can-buy">+{data.canBuy}</span>
                 )}
               </span>

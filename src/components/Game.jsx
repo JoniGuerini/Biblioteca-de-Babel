@@ -16,7 +16,7 @@ const TABS = [
 
 export function Game() {
   const { fps } = useGameLoop();
-  const { resetGame, offlineGains, dismissOfflineDialog } = useGameState();
+  const { resetGame, offlineGains, dismissOfflineDialog, saveGameManual, showFps, setShowFps, lastSaveTime } = useGameState();
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('geradores');
@@ -33,7 +33,7 @@ export function Game() {
 
   return (
     <div className="library-container">
-      <FpsDisplay fps={fps} />
+      {showFps && <FpsDisplay fps={fps} />}
       <header className="library-header">
         <LetterCounter />
         <div className="header-title">
@@ -90,6 +90,10 @@ export function Game() {
           showResetConfirm={showResetDialog}
           onResetConfirm={handleResetConfirm}
           onResetCancel={handleResetCancel}
+          onSaveClick={saveGameManual}
+          lastSaveTime={lastSaveTime}
+          showFps={showFps}
+          onShowFpsChange={setShowFps}
         />
         <OfflineProgressDialog
           gains={offlineGains}

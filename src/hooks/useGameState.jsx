@@ -6,12 +6,14 @@ import {
   processOfflineWithBreakdown,
   getLettersPerSecond,
   isGeneratorAutomated,
+  isPurchaseLocked,
   getProducerName,
   formatBigNumber,
   formatInteger,
   saveGame,
   loadGame,
   clearSave,
+  processMilestones,
 } from '../game';
 
 const SAVE_INTERVAL_MS = 5000;
@@ -26,6 +28,8 @@ export function GameProvider({ children }) {
     generatorCycleProgress: new Map(),
     scribes: new Decimal(1),
     generatorAccumulators: new Map(),
+    favor: new Decimal(0),
+    generatorMilestones: new Map(),
     lastActiveTime: Date.now(),
   });
   const lastSaveTimeRef = useRef(0);
@@ -33,12 +37,35 @@ export function GameProvider({ children }) {
   const displayStateRef = useRef({
     letters: '10',
     scribes: '1',
+    favor: '0',
     productionRate: '0',
     generators: [],
   });
   const [offlineGains, setOfflineGains] = useState(null);
   const [buyMode, setBuyMode] = useState('1x');
+  const [showFps, setShowFps] = useState(() => {
+    try {
+      const stored = localStorage.getItem('biblioteca-show-fps');
+      return stored !== 'false';
+    } catch {
+      return true;
+    }
+  });
+  const [lastSaveTime, setLastSaveTime] = useState(null);
   const [, forceUpdate] = useState(0);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('biblioteca-show-fps', String(showFps));
+    } catch {}
+  }, [showFps]);
+
+  const saveGameWithTimestamp = useCallback(() => {
+    saveGame({ ...stateRef.current, generators: generatorsRef.current });
+    setLastSaveTime(Date.now());
+  }, []);
+
+  const saveGameManual = saveGameWithTimestamp;
 
   const BUY_MODES = ['1x', '1%', '10%', '50%', '100%'];
 
@@ -72,11 +99,20 @@ export function GameProvider({ children }) {
     const mode = buyMode;
     const lettersPerSec = getLettersPerSecond(generators);
 
+    const { favor, generatorMilestones } = processMilestones(
+      generators,
+      state.favor || new Decimal(0),
+      state.generatorMilestones || new Map()
+    );
+    stateRef.current.favor = favor;
+    stateRef.current.generatorMilestones = generatorMilestones;
+
     const palavras = generators.find(g => g.level === 1);
     const scribesPerSec = palavras && palavras.count.gte(1) ? 1 : 0;
     displayStateRef.current = {
       letters: formatBigNumber(state.letters),
       scribes: formatInteger(state.scribes || new Decimal(0)),
+      favor: formatInteger(favor),
       scribesProductionRate: scribesPerSec,
       productionRate: formatBigNumber(lettersPerSec),
       generators: generators.map(gen => {
@@ -98,9 +134,11 @@ export function GameProvider({ children }) {
         const minToUnlock = gen.getMinPreviousTierToUnlock ? gen.getMinPreviousTierToUnlock() : 0;
         const isLocked = gen.produces && minToUnlock > 0 && gen.produces.count.lt(minToUnlock) && gen.count.lt(1);
         const canBuy = isLocked ? 0 : getBuyCount(gen, state, mode);
+        const purchaseLocked = isPurchaseLocked(generators, gen);
 
         return {
           name: gen.name,
+          purchaseLocked,
           count: formatBigNumber(gen.count),
           cost: formatBigNumber(cost),
           prevRequired: prevRequired ? formatBigNumber(prevRequired) : null,
@@ -116,7 +154,7 @@ export function GameProvider({ children }) {
           canBuy,
           isAutomated: automated,
           producerName,
-          disabled: !producerName && !canAfford && gen.count.lt(1),
+          disabled: isLocked,
           isLocked,
         };
       }),
@@ -127,7 +165,7 @@ export function GameProvider({ children }) {
     const generators = generatorsRef.current;
     const gen = generators.find(g => g.name === generatorName);
     if (!gen) return;
-    if (isGeneratorAutomated(generators, gen)) return;
+    if (isPurchaseLocked(generators, gen)) return;
 
     const state = stateRef.current;
     const count = getBuyCount(gen, state, buyMode);
@@ -163,6 +201,8 @@ export function GameProvider({ children }) {
       generatorCycleProgress: new Map(),
       scribes: new Decimal(1),
       generatorAccumulators: new Map(),
+      favor: new Decimal(0),
+      generatorMilestones: new Map(),
       lastActiveTime: Date.now(),
     };
     for (const gen of generators) {
@@ -208,15 +248,21 @@ export function GameProvider({ children }) {
       stateRef.current.generatorCycleProgress = loaded.generatorCycleProgress ?? new Map();
       stateRef.current.scribes = loaded.scribes ?? new Decimal(1);
       stateRef.current.generatorAccumulators = loaded.generatorAccumulators;
+      stateRef.current.favor = loaded.favor ?? new Decimal(0);
+      stateRef.current.generatorMilestones = loaded.generatorMilestones ?? new Map();
       if (loaded.lastSaveTime) {
         stateRef.current.lastActiveTime = loaded.lastSaveTime;
       }
+      setLastSaveTime(loaded.lastSaveTime ?? null);
       const elapsed = Date.now() - (loaded.lastSaveTime || Date.now());
       if (elapsed > 1000) processOfflineProgress(elapsed, true);
       else if (elapsed > 0) processOfflineProgress(elapsed, false);
     } else {
       stateRef.current.letters = new Decimal(10);
+      stateRef.current.favor = new Decimal(0);
+      stateRef.current.generatorMilestones = new Map();
       stateRef.current.lastActiveTime = Date.now();
+      setLastSaveTime(null);
     }
     updateDisplay();
     forceUpdate(n => n + 1);
@@ -226,7 +272,7 @@ export function GameProvider({ children }) {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         stateRef.current.lastActiveTime = Date.now();
-        saveGame({ ...stateRef.current, generators: generatorsRef.current });
+        saveGameWithTimestamp();
       } else {
         const elapsed = Date.now() - stateRef.current.lastActiveTime;
         if (elapsed > 0) {
@@ -238,7 +284,7 @@ export function GameProvider({ children }) {
     };
 
     const handleBeforeUnload = () => {
-      saveGame({ ...stateRef.current, generators: generatorsRef.current });
+      saveGameWithTimestamp();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -250,7 +296,7 @@ export function GameProvider({ children }) {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('pagehide', handleBeforeUnload);
     };
-  }, [processOfflineProgress, updateDisplay]);
+  }, [processOfflineProgress, updateDisplay, saveGameWithTimestamp]);
 
   const dismissOfflineDialog = useCallback(() => setOfflineGains(null), []);
 
@@ -263,6 +309,7 @@ export function GameProvider({ children }) {
     updateProduction,
     updateDisplay,
     lastSaveTimeRef,
+    saveGameWithTimestamp,
     forceUpdate,
     SAVE_INTERVAL_MS,
     UI_UPDATE_INTERVAL_MS,
@@ -271,6 +318,10 @@ export function GameProvider({ children }) {
     buyMode,
     setBuyMode,
     BUY_MODES,
+    saveGameManual,
+    showFps,
+    setShowFps,
+    lastSaveTime,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

@@ -1,4 +1,5 @@
 import { useGameState } from '../hooks/useGameState';
+import { Tooltip } from './Tooltip';
 
 export function BuyModeToggle() {
   const { buyMode, setBuyMode, BUY_MODES } = useGameState();
@@ -10,14 +11,15 @@ export function BuyModeToggle() {
   };
 
   return (
-    <button
-      type="button"
-      className="buy-mode-toggle"
-      onClick={cycleMode}
-      title="Multicompra: clique para alternar"
-      aria-label={`Multicompra: ${buyMode}. Clique para alternar.`}
-    >
-      {buyMode}
-    </button>
+    <Tooltip text="Multicompra: clique para alternar" align="right">
+      <button
+        type="button"
+        className="buy-mode-toggle"
+        onClick={cycleMode}
+        aria-label={`Multicompra: ${buyMode}. Clique para alternar.`}
+      >
+        {buyMode}
+      </button>
+    </Tooltip>
   );
 }

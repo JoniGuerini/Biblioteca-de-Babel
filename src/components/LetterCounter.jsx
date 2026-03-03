@@ -20,6 +20,13 @@ export function LetterCounter() {
           Produção: <span>{state.scribesProductionRate ?? 0}</span>/s
         </p>
       </div>
+      <div className="header-counter">
+        <span className="counter-label">Favor</span>
+        <div className="letter-counter">{state.favor ?? '0'}</div>
+        <p className="production-rate">
+          Marcos atingidos nos geradores
+        </p>
+      </div>
     </div>
   );
 }

@@ -105,6 +105,21 @@ export function isGeneratorAutomated(generators, gen) {
   return generators.some(g => g.produces === gen && g.count.gt(0));
 }
 
+/** Pode comprar: o gerador mais alto que tem, o anterior e o próximo (para progredir).
+ *  Ex: com Frases → pode comprar Palavras, Frases e Parágrafos.
+ *  Ex: com Páginas → pode comprar Parágrafos, Páginas e Capítulos. */
+export function isPurchaseLocked(generators, gen) {
+  const highestOwned = Math.max(0, ...generators.filter(g => g.count.gte(1)).map(g => g.level));
+  if (highestOwned === 0) return false;
+  const maxLevel = Math.max(...generators.map(g => g.level));
+  const canBuyLevels = [
+    highestOwned - 1,
+    highestOwned,
+    highestOwned + 1,
+  ].filter(l => l >= 1 && l <= maxLevel);
+  return !canBuyLevels.includes(gen.level);
+}
+
 export function getProducerName(generators, gen) {
   const producer = generators.find(g => g.produces === gen && g.count.gt(0));
   return producer ? producer.name : null;
