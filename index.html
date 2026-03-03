@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Biblioteca de Babel</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="library-container">
+    <div class="fps-display" id="fpsDisplay">60 FPS</div>
+    <header class="library-header">
+      <div class="header-counter">
+        <span class="counter-label">Letras</span>
+        <div class="letter-counter" id="letterDisplay">0</div>
+        <p class="production-rate">Produção: <span id="productionRate">0</span>/s</p>
+      </div>
+      <div class="header-title">
+        <h1>Biblioteca de Babel</h1>
+        <p class="subtitle">O universo (que outros chamam de Biblioteca) compõe-se de um número indefinido de hexágonos...</p>
+      </div>
+    </header>
+
+    <main class="game-content">
+      <section class="generators-panel">
+        <h2>Geradores</h2>
+        <div class="generators-list" id="generatorsList">
+          <!-- Botões gerados via JavaScript -->
+        </div>
+      </section>
+    </main>
+
+    <footer class="library-footer">
+      <button type="button" class="reset-btn" id="resetBtn">Resetar progresso</button>
+      <p>Inspirado em Jorge Luis Borges — Cada livro é único e infinito</p>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/break_eternity.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
