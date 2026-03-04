@@ -357,16 +357,12 @@ button {
   min-height: 0;
   overflow: auto;
   padding: 0.5rem 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--parchment-dark) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .generators-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-.generators-panel::-webkit-scrollbar-track {
-  background: transparent;
+  display: none;
 }
 
 .generators-panel::-webkit-scrollbar-thumb {
@@ -624,21 +620,12 @@ button {
   min-height: 0;
   overflow: auto;
   padding: 0.5rem 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--parchment-dark) transparent;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .upgrades-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-.upgrades-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.upgrades-panel::-webkit-scrollbar-thumb {
-  background: var(--parchment-dark);
-  border-radius: 4px;
+  display: none;
 }
 
 .upgrades-empty {
