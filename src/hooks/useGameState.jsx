@@ -23,6 +23,9 @@ import {
   getTotalScribesPerSecond,
   getPrestigeInfo,
   canPrestige,
+  getScribeUpgradeCost,
+  tryBuyScribeUpgrade,
+  getScribeProductionMultiplier,
 } from '../game';
 
 const SAVE_INTERVAL_MS = 5000;
@@ -226,6 +229,7 @@ export function GameProvider({ children }) {
       favor: new Decimal(0),
       generatorMilestones: new Map(),
       claimedScribeMilestones: 0,
+      scribeUpgradeRank: 0,
       prestigePoints: 0,
       lastActiveTime: Date.now(),
     };
@@ -254,6 +258,7 @@ export function GameProvider({ children }) {
       favor: new Decimal(0),
       generatorMilestones: new Map(),
       claimedScribeMilestones: 0,
+      scribeUpgradeRank: 0,
       prestigePoints: currentPrestigePoints + 1,
       lastActiveTime: Date.now(),
     };
@@ -322,9 +327,15 @@ export function GameProvider({ children }) {
     const palavras = generators.find(g => g.level === 1);
     const hasPalavras = palavras && palavras.count.gte(1);
     const claimedCount = state.claimedScribeMilestones || 0;
-    const currentRate = getTotalScribesPerSecond(claimedCount, hasPalavras);
+    const upgradeRank = state.scribeUpgradeRank || 0;
+    const currentRate = getTotalScribesPerSecond(claimedCount, hasPalavras, upgradeRank);
     
     const milestones = getAllMilestonesInfo(claimedCount, state.letters);
+    
+    const upgradeCost = getScribeUpgradeCost(upgradeRank);
+    const canAffordUpgrade = state.favor.gte(upgradeCost);
+    const currentMultiplier = getScribeProductionMultiplier(upgradeRank);
+    const nextMultiplier = getScribeProductionMultiplier(upgradeRank + 1);
     
     return {
       currentRate,
@@ -334,6 +345,14 @@ export function GameProvider({ children }) {
         ...m,
         costFormatted: formatBigNumber(m.cost),
       })),
+      upgrade: {
+        rank: upgradeRank,
+        cost: upgradeCost,
+        costFormatted: formatInteger(upgradeCost),
+        canAfford: canAffordUpgrade,
+        currentMultiplier,
+        nextMultiplier,
+      },
     };
   }, []);
 
@@ -349,6 +368,20 @@ export function GameProvider({ children }) {
     if (success) {
       state.letters = newLetters;
       state.claimedScribeMilestones = newClaimedCount;
+      updateDisplay();
+      forceUpdate(n => n + 1);
+    }
+  }, [updateDisplay]);
+
+  const buyScribeUpgrade = useCallback(() => {
+    const state = stateRef.current;
+    const currentRank = state.scribeUpgradeRank || 0;
+    
+    const { success, newFavor, newRank } = tryBuyScribeUpgrade(currentRank, state.favor);
+    
+    if (success) {
+      state.favor = newFavor;
+      state.scribeUpgradeRank = newRank;
       updateDisplay();
       forceUpdate(n => n + 1);
     }
@@ -392,6 +425,7 @@ export function GameProvider({ children }) {
       stateRef.current.favor = loaded.favor ?? new Decimal(0);
       stateRef.current.generatorMilestones = loaded.generatorMilestones ?? new Map();
       stateRef.current.claimedScribeMilestones = loaded.claimedScribeMilestones ?? 0;
+      stateRef.current.scribeUpgradeRank = loaded.scribeUpgradeRank ?? 0;
       stateRef.current.prestigePoints = loaded.prestigePoints ?? 0;
       if (loaded.lastSaveTime) {
         stateRef.current.lastActiveTime = loaded.lastSaveTime;
@@ -479,6 +513,7 @@ export function GameProvider({ children }) {
     UPGRADE_TYPES,
     getScribeMilestonesDisplay,
     claimScribeMilestone,
+    buyScribeUpgrade,
     doPrestige,
   };
 

@@ -43,6 +43,7 @@ export function saveGame(gameState) {
       generatorMilestones: generatorMilestonesObj,
       upgrades: upgradesObj,
       claimedScribeMilestones: gameState.claimedScribeMilestones || 0,
+      scribeUpgradeRank: gameState.scribeUpgradeRank || 0,
       prestigePoints: gameState.prestigePoints || 0,
       lastSaveTime: Date.now(),
     };
@@ -105,8 +106,9 @@ export function loadGame(generators) {
       }
     }
     const claimedScribeMilestones = save.claimedScribeMilestones ?? 0;
+    const scribeUpgradeRank = save.scribeUpgradeRank ?? 0;
     const prestigePoints = save.prestigePoints ?? 0;
-    return { letters, generatorCycleProgress, scribes, generatorAccumulators, favor, generatorMilestones, upgrades, claimedScribeMilestones, prestigePoints, lastSaveTime: save.lastSaveTime };
+    return { letters, generatorCycleProgress, scribes, generatorAccumulators, favor, generatorMilestones, upgrades, claimedScribeMilestones, scribeUpgradeRank, prestigePoints, lastSaveTime: save.lastSaveTime };
   } catch (e) {
     console.warn('Erro ao carregar save:', e);
     return null;

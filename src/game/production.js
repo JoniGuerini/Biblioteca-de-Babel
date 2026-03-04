@@ -47,7 +47,8 @@ export function updateProduction(gameState, deltaTime) {
   const palavras = gameState.generators.find(g => g.level === 1);
   const hasPalavras = palavras && palavras.count.gte(1);
   const claimedScribeMilestones = gameState.claimedScribeMilestones || 0;
-  const scribesPerSecond = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras);
+  const scribeUpgradeRank = gameState.scribeUpgradeRank || 0;
+  const scribesPerSecond = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras, scribeUpgradeRank);
   const scribesGain = new Decimal(deltaTime / 1000).mul(scribesPerSecond);
   const newScribes = (gameState.scribes || new Decimal(0)).plus(scribesGain);
 

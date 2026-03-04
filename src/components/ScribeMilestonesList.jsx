@@ -1,14 +1,49 @@
 import { useGameState } from '../hooks/useGameState';
 
 export function ScribeMilestonesList() {
-  const { getScribeMilestonesDisplay, claimScribeMilestone } = useGameState();
+  const { getScribeMilestonesDisplay, claimScribeMilestone, buyScribeUpgrade } = useGameState();
   const data = getScribeMilestonesDisplay();
 
   const nextMilestone = data.milestones.find(m => m.isNext);
   const availableToClaim = data.milestones.filter(m => m.canClaim).length;
+  const { upgrade } = data;
 
   return (
     <div className="scribe-milestones-container">
+      <div className="scribe-upgrade-section">
+        <div className="scribe-upgrade-card">
+          <div className="scribe-upgrade-header">
+            <span className="scribe-upgrade-title">Produção de Escribas</span>
+            <span className="scribe-upgrade-rank">Rank {upgrade.rank}</span>
+          </div>
+          
+          <div className="scribe-upgrade-values">
+            <span className="scribe-upgrade-current">
+              Multiplicador atual: {upgrade.currentMultiplier}x
+            </span>
+            <span className="scribe-upgrade-arrow">→</span>
+            <span className="scribe-upgrade-next">
+              Próximo: {upgrade.nextMultiplier}x
+            </span>
+          </div>
+
+          <div className="scribe-upgrade-cost">
+            <span className={upgrade.canAfford ? 'affordable' : ''}>
+              {upgrade.costFormatted} Favor
+            </span>
+          </div>
+
+          <button
+            type="button"
+            className="scribe-upgrade-btn"
+            disabled={!upgrade.canAfford}
+            onClick={buyScribeUpgrade}
+          >
+            {upgrade.canAfford ? 'Comprar Melhoria' : 'Favor insuficiente'}
+          </button>
+        </div>
+      </div>
+
       <div className="scribe-milestone-single">
         {nextMilestone ? (
           <div className="scribe-milestone-card next">

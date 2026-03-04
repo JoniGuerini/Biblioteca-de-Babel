@@ -12,6 +12,9 @@ const BASE_COST = 500;
 const COST_MULTIPLIER = 10;
 const BONUS_PER_MILESTONE = 1;
 
+const SCRIBE_UPGRADE_BASE_COST = 5;
+const SCRIBE_UPGRADE_COST_MULTIPLIER = 2;
+
 /**
  * Gera a lista de marcos disponíveis
  * @param {number} count - Quantidade de marcos a gerar
@@ -36,13 +39,45 @@ export function getScribeBonusFromMilestones(claimedMilestones) {
 }
 
 /**
- * Calcula a taxa total de escribas por segundo (base + bônus)
+ * Calcula o multiplicador de produção baseado no rank do upgrade
  */
-export function getTotalScribesPerSecond(claimedMilestones, hasPalavras) {
+export function getScribeProductionMultiplier(upgradeRank) {
+  return Math.pow(2, upgradeRank);
+}
+
+/**
+ * Calcula o custo do próximo upgrade de produção de escribas
+ */
+export function getScribeUpgradeCost(currentRank) {
+  return new Decimal(SCRIBE_UPGRADE_BASE_COST).mul(Decimal.pow(SCRIBE_UPGRADE_COST_MULTIPLIER, currentRank));
+}
+
+/**
+ * Calcula a taxa total de escribas por segundo (base + bônus) * multiplicador
+ */
+export function getTotalScribesPerSecond(claimedMilestones, hasPalavras, upgradeRank = 0) {
   if (!hasPalavras) return 0;
   const baseRate = 1;
   const bonus = getScribeBonusFromMilestones(claimedMilestones);
-  return baseRate + bonus;
+  const multiplier = getScribeProductionMultiplier(upgradeRank);
+  return (baseRate + bonus) * multiplier;
+}
+
+/**
+ * Tenta comprar upgrade de produção de escribas
+ */
+export function tryBuyScribeUpgrade(currentRank, favor) {
+  const cost = getScribeUpgradeCost(currentRank);
+  
+  if (!favor.gte(cost)) {
+    return { success: false, newFavor: favor, newRank: currentRank };
+  }
+  
+  return {
+    success: true,
+    newFavor: favor.sub(cost),
+    newRank: currentRank + 1,
+  };
 }
 
 /**

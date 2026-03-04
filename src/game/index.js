@@ -19,6 +19,9 @@ export {
   getNextMilestoneInfo,
   tryClaimMilestone,
   getAllMilestonesInfo,
+  getScribeProductionMultiplier,
+  getScribeUpgradeCost,
+  tryBuyScribeUpgrade,
 } from './scribeMilestones';
 export {
   INFINITY_LIMIT,
