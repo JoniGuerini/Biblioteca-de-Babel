@@ -33,7 +33,7 @@ export function UpgradesList() {
               </div>
               
               <div className="upgrade-current">
-                Ciclo: <strong>{upgrade.currentCycleFormatted}</strong>
+                <strong>{upgrade.currentCycleFormatted}</strong>
                 {!upgrade.speed.isMaxed && (
                   <span className="upgrade-arrow"> → {upgrade.nextCycleFormatted}</span>
                 )}
@@ -62,7 +62,7 @@ export function UpgradesList() {
               </div>
               
               <div className="upgrade-current">
-                Por ciclo: <strong>{upgrade.currentProductionFormatted}</strong>
+                <strong>{upgrade.currentProductionFormatted}</strong>
                 <span className="upgrade-arrow"> → {upgrade.nextProductionFormatted}</span>
               </div>
 

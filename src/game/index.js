@@ -13,7 +13,8 @@ export {
   getMaxSpeedRanks,
 } from './upgrades';
 export {
-  generateScribeMilestones,
+  getMilestone,
+  getMilestoneCost,
   getScribeBonusFromMilestones,
   getTotalScribesPerSecond,
   getNextMilestoneInfo,

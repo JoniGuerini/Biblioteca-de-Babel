@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useGameState } from '../hooks/useGameState';
+import { formatBigNumber } from '../game/format';
 
 export function GeneratorButton({ data }) {
   const { buyGenerator, buyMode } = useGameState();
@@ -14,11 +15,35 @@ export function GeneratorButton({ data }) {
   }
   prevProgressRef.current = progress;
 
-  const costText = data.purchaseLocked && data.producerName
-    ? `Produzido por ${data.producerName}`
-    : data.prevName
-      ? `${data.cost} Letras + ${data.prevRequired} ${data.prevName} + ${data.scribesRequired} Escribas`
-      : `${data.cost} Letras + ${data.scribesRequired} Escribas`;
+  const renderCost = () => {
+    if (data.purchaseLocked && data.producerName) {
+      return `Produzido por ${data.producerName}`;
+    }
+
+    const lettersClass = !data.hasEnoughLetters ? 'generator-cost-insufficient' : '';
+    const prevClass = !data.hasEnoughPrev ? 'generator-cost-insufficient' : '';
+    const scribesClass = !data.hasEnoughScribes ? 'generator-cost-insufficient' : '';
+
+    if (data.prevName) {
+      return (
+        <>
+          <span className={lettersClass}>{data.cost} Letras</span>
+          {' + '}
+          <span className={prevClass}>{data.prevRequired} {data.prevName}</span>
+          {' + '}
+          <span className={scribesClass}>{data.scribesRequired} Escribas</span>
+        </>
+      );
+    }
+
+    return (
+      <>
+        <span className={lettersClass}>{data.cost} Letras</span>
+        {' + '}
+        <span className={scribesClass}>{data.scribesRequired} Escribas</span>
+      </>
+    );
+  };
 
   const hasCount = parseFloat(data.count) > 0;
 
@@ -65,13 +90,13 @@ export function GeneratorButton({ data }) {
               )}
             </div>
             <div className="generator-footer">
-              <span className={`generator-cost ${!data.purchaseLocked && !data.canAfford ? 'generator-cost-insufficient' : ''}`}>
-                {costText}
+              <span className="generator-cost">
+                {renderCost()}
               </span>
               <span className="generator-count">
                 ×{data.count}
                 {buyMode !== '1x' && data.canBuy > 0 && !data.purchaseLocked && (
-                  <span className="generator-can-buy">+{data.canBuy}</span>
+                  <span className="generator-can-buy">+{formatBigNumber(data.canBuy)}</span>
                 )}
               </span>
             </div>

@@ -16,19 +16,23 @@ const SCRIBE_UPGRADE_BASE_COST = 5;
 const SCRIBE_UPGRADE_COST_MULTIPLIER = 2;
 
 /**
- * Gera a lista de marcos disponíveis
- * @param {number} count - Quantidade de marcos a gerar
+ * Calcula o custo de um marco específico
+ * @param {number} index - Índice do marco (0-based)
  */
-export function generateScribeMilestones(count = 20) {
-  const milestones = [];
-  for (let i = 0; i < count; i++) {
-    milestones.push({
-      id: i,
-      cost: new Decimal(BASE_COST).mul(Decimal.pow(COST_MULTIPLIER, i)),
-      bonus: BONUS_PER_MILESTONE,
-    });
-  }
-  return milestones;
+export function getMilestoneCost(index) {
+  return new Decimal(BASE_COST).mul(Decimal.pow(COST_MULTIPLIER, index));
+}
+
+/**
+ * Gera um marco específico por índice
+ * @param {number} index - Índice do marco
+ */
+export function getMilestone(index) {
+  return {
+    id: index,
+    cost: getMilestoneCost(index),
+    bonus: BONUS_PER_MILESTONE,
+  };
 }
 
 /**
@@ -81,16 +85,10 @@ export function tryBuyScribeUpgrade(currentRank, favor) {
 }
 
 /**
- * Obtém informações do próximo marco disponível
+ * Obtém informações do próximo marco disponível (infinito)
  */
 export function getNextMilestoneInfo(claimedMilestones, letters) {
-  const milestones = generateScribeMilestones();
-  
-  if (claimedMilestones >= milestones.length) {
-    return null;
-  }
-  
-  const nextMilestone = milestones[claimedMilestones];
+  const nextMilestone = getMilestone(claimedMilestones);
   const canClaim = letters.gte(nextMilestone.cost);
   
   return {
@@ -126,24 +124,20 @@ export function tryClaimMilestone(claimedMilestones, letters) {
 }
 
 /**
- * Gera informações de todos os marcos para exibição na UI
+ * Gera informações dos marcos para exibição na UI (mostra apenas o próximo)
+ * Sistema infinito - sempre há um próximo marco disponível
  */
 export function getAllMilestonesInfo(claimedMilestones, letters) {
-  const milestones = generateScribeMilestones();
+  const nextMilestone = getMilestone(claimedMilestones);
+  const canClaim = letters.gte(nextMilestone.cost);
   
-  return milestones.map((milestone, index) => {
-    const isClaimed = index < claimedMilestones;
-    const isNext = index === claimedMilestones;
-    const canClaim = isNext && letters.gte(milestone.cost);
-    
-    return {
-      id: milestone.id,
-      cost: milestone.cost,
-      bonus: milestone.bonus,
-      isClaimed,
-      isNext,
-      canClaim,
-      isLocked: !isClaimed && !isNext,
-    };
-  });
+  return [{
+    id: nextMilestone.id,
+    cost: nextMilestone.cost,
+    bonus: nextMilestone.bonus,
+    isClaimed: false,
+    isNext: true,
+    canClaim,
+    isLocked: false,
+  }];
 }

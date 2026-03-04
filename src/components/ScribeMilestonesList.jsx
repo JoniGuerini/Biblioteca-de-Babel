@@ -10,37 +10,34 @@ export function ScribeMilestonesList() {
 
   return (
     <div className="scribe-milestones-container">
-      <div className="scribe-upgrade-section">
-        <div className="scribe-upgrade-card">
-          <div className="scribe-upgrade-header">
-            <span className="scribe-upgrade-title">Produção de Escribas</span>
-            <span className="scribe-upgrade-rank">Rank {upgrade.rank}</span>
-          </div>
-          
-          <div className="scribe-upgrade-values">
-            <span className="scribe-upgrade-current">
-              Multiplicador atual: {upgrade.currentMultiplier}x
-            </span>
-            <span className="scribe-upgrade-arrow">→</span>
-            <span className="scribe-upgrade-next">
-              Próximo: {upgrade.nextMultiplier}x
-            </span>
+      <div className="upgrades-list">
+        <div className="upgrade-card">
+          <div className="upgrade-card-header">
+            <span className="upgrade-generator-name">Produção de Escribas</span>
           </div>
 
-          <div className="scribe-upgrade-cost">
-            <span className={upgrade.canAfford ? 'affordable' : ''}>
-              {upgrade.costFormatted} Favor
-            </span>
-          </div>
+          <div className="upgrade-options">
+            <div className="upgrade-option">
+              <div className="upgrade-option-header">
+                <span className="upgrade-type-label">Multiplicador</span>
+                <span className="upgrade-rank">Rank {upgrade.rank}</span>
+              </div>
+              
+              <div className="upgrade-current">
+                <strong>{upgrade.currentMultiplier}x</strong>
+                <span className="upgrade-arrow"> → {upgrade.nextMultiplier}x</span>
+              </div>
 
-          <button
-            type="button"
-            className="scribe-upgrade-btn"
-            disabled={!upgrade.canAfford}
-            onClick={buyScribeUpgrade}
-          >
-            {upgrade.canAfford ? 'Comprar Melhoria' : 'Favor insuficiente'}
-          </button>
+              <button
+                type="button"
+                className="upgrade-btn"
+                disabled={!upgrade.canAfford}
+                onClick={buyScribeUpgrade}
+              >
+                <span className="upgrade-btn-cost">{upgrade.costFormatted} Favor</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

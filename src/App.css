@@ -526,8 +526,8 @@ button {
   min-width: 0;
 }
 
-.generator-cost.generator-cost-insufficient {
-  color: #e8a8a5;
+.generator-cost .generator-cost-insufficient {
+  color: #c45a5a;
 }
 
 .generator-count {

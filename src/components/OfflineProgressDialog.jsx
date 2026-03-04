@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { formatBigNumber, formatInteger } from '../game';
+import { formatBigNumber } from '../game';
 
 const UNITS = [
   { ms: 365 * 24 * 60 * 60 * 1000, singular: 'ano', plural: 'anos' },
@@ -62,7 +62,7 @@ export function OfflineProgressDialog({ gains, onDismiss }) {
           {hasScribes && (
             <li className="offline-gain-item">
               <span className="offline-gain-label">Escribas</span>
-              <span className="offline-gain-value">+{formatInteger(scribesProduced)}</span>
+              <span className="offline-gain-value">+{formatBigNumber(scribesProduced)}</span>
             </li>
           )}
           {Object.entries(generatorProduced).map(([name, amount]) => (
