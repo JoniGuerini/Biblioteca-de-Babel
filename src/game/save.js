@@ -24,6 +24,15 @@ export function saveGame(gameState) {
         generatorMilestonesObj[name] = index;
       }
     }
+    const upgradesObj = {};
+    if (gameState.upgrades) {
+      for (const [name, data] of gameState.upgrades) {
+        upgradesObj[name] = {
+          speedRank: data.speedRank,
+          productionRank: data.productionRank,
+        };
+      }
+    }
     const save = {
       letters: gameState.letters.toString(),
       scribes: (gameState.scribes || new Decimal(0)).toString(),
@@ -32,6 +41,9 @@ export function saveGame(gameState) {
       cycleProgress: cycleProgressObj,
       favor: (gameState.favor || new Decimal(0)).toString(),
       generatorMilestones: generatorMilestonesObj,
+      upgrades: upgradesObj,
+      claimedScribeMilestones: gameState.claimedScribeMilestones || 0,
+      prestigePoints: gameState.prestigePoints || 0,
       lastSaveTime: Date.now(),
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(save));
@@ -82,7 +94,19 @@ export function loadGame(generators) {
         generatorMilestones.set(newName, typeof index === 'number' ? index : parseInt(index, 10));
       }
     }
-    return { letters, generatorCycleProgress, scribes, generatorAccumulators, favor, generatorMilestones, lastSaveTime: save.lastSaveTime };
+    const upgrades = new Map();
+    if (save.upgrades) {
+      for (const [name, data] of Object.entries(save.upgrades)) {
+        const newName = NAME_MAP[name] || name;
+        upgrades.set(newName, {
+          speedRank: data.speedRank || 0,
+          productionRank: data.productionRank || 0,
+        });
+      }
+    }
+    const claimedScribeMilestones = save.claimedScribeMilestones ?? 0;
+    const prestigePoints = save.prestigePoints ?? 0;
+    return { letters, generatorCycleProgress, scribes, generatorAccumulators, favor, generatorMilestones, upgrades, claimedScribeMilestones, prestigePoints, lastSaveTime: save.lastSaveTime };
   } catch (e) {
     console.warn('Erro ao carregar save:', e);
     return null;

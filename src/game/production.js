@@ -1,4 +1,5 @@
 import { Decimal } from './Decimal';
+import { getTotalScribesPerSecond } from './scribeMilestones';
 
 const OFFLINE_CHUNK_MS = 10000;
 const MAX_OFFLINE_MS = 30 * 24 * 60 * 60 * 1000;
@@ -38,8 +39,6 @@ export function processOfflineWithBreakdown(gameState, elapsedMs) {
   return { lettersProduced, generatorProduced, scribesProduced };
 }
 
-const ESCRIBAS_PER_SECOND = 1;
-
 export function updateProduction(gameState, deltaTime) {
   const generatorGains = new Map();
   let lettersProduced = new Decimal(0);
@@ -47,7 +46,9 @@ export function updateProduction(gameState, deltaTime) {
 
   const palavras = gameState.generators.find(g => g.level === 1);
   const hasPalavras = palavras && palavras.count.gte(1);
-  const scribesGain = hasPalavras ? new Decimal(deltaTime / 1000).mul(ESCRIBAS_PER_SECOND) : new Decimal(0);
+  const claimedScribeMilestones = gameState.claimedScribeMilestones || 0;
+  const scribesPerSecond = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras);
+  const scribesGain = new Decimal(deltaTime / 1000).mul(scribesPerSecond);
   const newScribes = (gameState.scribes || new Decimal(0)).plus(scribesGain);
 
   for (const gen of gameState.generators) {

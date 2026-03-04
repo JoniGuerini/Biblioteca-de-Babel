@@ -14,6 +14,15 @@ import {
   loadGame,
   clearSave,
   processMilestones,
+  UPGRADE_TYPES,
+  getUpgradeInfo,
+  tryBuyUpgrade,
+  createUpgradesState,
+  getAllMilestonesInfo,
+  tryClaimMilestone,
+  getTotalScribesPerSecond,
+  getPrestigeInfo,
+  canPrestige,
 } from '../game';
 
 const SAVE_INTERVAL_MS = 5000;
@@ -23,6 +32,7 @@ const GameContext = createContext(null);
 
 export function GameProvider({ children }) {
   const generatorsRef = useRef(createGenerators());
+  const upgradesRef = useRef(createUpgradesState(generatorsRef.current));
   const stateRef = useRef({
     letters: new Decimal(10),
     generatorCycleProgress: new Map(),
@@ -30,6 +40,8 @@ export function GameProvider({ children }) {
     generatorAccumulators: new Map(),
     favor: new Decimal(0),
     generatorMilestones: new Map(),
+    claimedScribeMilestones: 0,
+    prestigePoints: 0,
     lastActiveTime: Date.now(),
   });
   const lastSaveTimeRef = useRef(0);
@@ -61,7 +73,7 @@ export function GameProvider({ children }) {
   }, [showFps]);
 
   const saveGameWithTimestamp = useCallback(() => {
-    saveGame({ ...stateRef.current, generators: generatorsRef.current });
+    saveGame({ ...stateRef.current, generators: generatorsRef.current, upgrades: upgradesRef.current });
     setLastSaveTime(Date.now());
   }, []);
 
@@ -108,13 +120,21 @@ export function GameProvider({ children }) {
     stateRef.current.generatorMilestones = generatorMilestones;
 
     const palavras = generators.find(g => g.level === 1);
-    const scribesPerSec = palavras && palavras.count.gte(1) ? 1 : 0;
+    const hasPalavras = palavras && palavras.count.gte(1);
+    const claimedScribeMilestones = state.claimedScribeMilestones || 0;
+    const scribesPerSec = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras);
+    const prestigeInfo = getPrestigeInfo(state.letters, state.prestigePoints || 0, lettersPerSec);
     displayStateRef.current = {
       letters: formatBigNumber(state.letters),
       scribes: formatInteger(state.scribes || new Decimal(0)),
       favor: formatInteger(favor),
       scribesProductionRate: scribesPerSec,
       productionRate: formatBigNumber(lettersPerSec),
+      prestigeProgress: prestigeInfo.progress,
+      prestigeProgressPercent: prestigeInfo.progressPercent,
+      canPrestige: prestigeInfo.canPrestige,
+      prestigePoints: state.prestigePoints || 0,
+      prestigeEstimatedTime: prestigeInfo.estimatedTime,
       generators: generators.map(gen => {
         const cost = gen.getCost();
         const prevRequired = gen.getPreviousTierRequired();
@@ -128,6 +148,7 @@ export function GameProvider({ children }) {
         const producerName = getProducerName(generators, gen);
         const cycleSec = (gen.getCycleDurationMs() / 1000);
         const totalPerCycle = gen.getTotalPerCycle();
+        const perSecond = gen.getEffectivePerSecond();
         const outputName = gen.produces ? gen.produces.name : 'Letras';
         const cycleProgress = (state.generatorCycleProgress || new Map()).get(gen.name) ?? 0;
 
@@ -147,6 +168,7 @@ export function GameProvider({ children }) {
           scribesRequired,
           cycleDurationSec: cycleSec,
           totalPerCycle: formatBigNumber(totalPerCycle),
+          perSecond: formatBigNumber(perSecond),
           outputName,
           cycleProgress: Math.min(1, Math.max(0, cycleProgress)),
           flavorText: gen.flavorText || '',
@@ -203,14 +225,133 @@ export function GameProvider({ children }) {
       generatorAccumulators: new Map(),
       favor: new Decimal(0),
       generatorMilestones: new Map(),
+      claimedScribeMilestones: 0,
+      prestigePoints: 0,
       lastActiveTime: Date.now(),
     };
     for (const gen of generators) {
       gen.count = new Decimal(0);
+      gen.applyUpgrades(0, 0);
     }
+    upgradesRef.current = createUpgradesState(generators);
     clearSave();
     updateDisplay();
     forceUpdate(n => n + 1);
+  }, [updateDisplay]);
+
+  const doPrestige = useCallback(() => {
+    const state = stateRef.current;
+    if (!canPrestige(state.letters)) return;
+
+    const generators = generatorsRef.current;
+    const currentPrestigePoints = state.prestigePoints || 0;
+    
+    stateRef.current = {
+      letters: new Decimal(10),
+      generatorCycleProgress: new Map(),
+      scribes: new Decimal(1),
+      generatorAccumulators: new Map(),
+      favor: new Decimal(0),
+      generatorMilestones: new Map(),
+      claimedScribeMilestones: 0,
+      prestigePoints: currentPrestigePoints + 1,
+      lastActiveTime: Date.now(),
+    };
+    for (const gen of generators) {
+      gen.count = new Decimal(0);
+      gen.applyUpgrades(0, 0);
+    }
+    upgradesRef.current = createUpgradesState(generators);
+    updateDisplay();
+    forceUpdate(n => n + 1);
+  }, [updateDisplay]);
+
+  const buyUpgrade = useCallback((generatorName, upgradeType) => {
+    const generators = generatorsRef.current;
+    const gen = generators.find(g => g.name === generatorName);
+    if (!gen) return;
+
+    const state = stateRef.current;
+    const upgrades = upgradesRef.current;
+    const maxSpeedRanks = gen.getMaxSpeedRanks();
+
+    const { success, newFavor } = tryBuyUpgrade(
+      upgrades, 
+      generatorName, 
+      upgradeType, 
+      state.favor,
+      maxSpeedRanks
+    );
+
+    if (success) {
+      state.favor = newFavor;
+      const genUpgrades = upgrades.get(generatorName);
+      gen.applyUpgrades(genUpgrades.speedRank, genUpgrades.productionRank);
+      updateDisplay();
+      forceUpdate(n => n + 1);
+    }
+  }, [updateDisplay]);
+
+  const getUpgradesDisplay = useCallback(() => {
+    const generators = generatorsRef.current;
+    const upgrades = upgradesRef.current;
+    const state = stateRef.current;
+
+    return generators.map(gen => {
+      const info = getUpgradeInfo(gen, upgrades);
+      const hasGenerator = gen.count.gt(0);
+      
+      return {
+        ...info,
+        hasGenerator,
+        canAffordSpeed: info.speed.cost && state.favor.gte(info.speed.cost),
+        canAffordProduction: state.favor.gte(info.production.cost),
+        speedCostFormatted: info.speed.cost ? formatInteger(info.speed.cost) : null,
+        productionCostFormatted: formatInteger(info.production.cost),
+        currentCycleFormatted: (info.speed.currentValue / 1000).toFixed(1) + 's',
+        nextCycleFormatted: (info.speed.nextValue / 1000).toFixed(1) + 's',
+        currentProductionFormatted: formatBigNumber(info.production.currentValue),
+        nextProductionFormatted: formatBigNumber(info.production.nextValue),
+      };
+    });
+  }, []);
+
+  const getScribeMilestonesDisplay = useCallback(() => {
+    const state = stateRef.current;
+    const generators = generatorsRef.current;
+    const palavras = generators.find(g => g.level === 1);
+    const hasPalavras = palavras && palavras.count.gte(1);
+    const claimedCount = state.claimedScribeMilestones || 0;
+    const currentRate = getTotalScribesPerSecond(claimedCount, hasPalavras);
+    
+    const milestones = getAllMilestonesInfo(claimedCount, state.letters);
+    
+    return {
+      currentRate,
+      hasPalavras,
+      claimedCount,
+      milestones: milestones.map(m => ({
+        ...m,
+        costFormatted: formatBigNumber(m.cost),
+      })),
+    };
+  }, []);
+
+  const claimScribeMilestone = useCallback(() => {
+    const state = stateRef.current;
+    const claimedCount = state.claimedScribeMilestones || 0;
+    
+    const { success, newLetters, newClaimedCount } = tryClaimMilestone(
+      claimedCount,
+      state.letters
+    );
+    
+    if (success) {
+      state.letters = newLetters;
+      state.claimedScribeMilestones = newClaimedCount;
+      updateDisplay();
+      forceUpdate(n => n + 1);
+    }
   }, [updateDisplay]);
 
   const processOfflineProgress = useCallback((elapsed, showDialog = true) => {
@@ -250,8 +391,19 @@ export function GameProvider({ children }) {
       stateRef.current.generatorAccumulators = loaded.generatorAccumulators;
       stateRef.current.favor = loaded.favor ?? new Decimal(0);
       stateRef.current.generatorMilestones = loaded.generatorMilestones ?? new Map();
+      stateRef.current.claimedScribeMilestones = loaded.claimedScribeMilestones ?? 0;
+      stateRef.current.prestigePoints = loaded.prestigePoints ?? 0;
       if (loaded.lastSaveTime) {
         stateRef.current.lastActiveTime = loaded.lastSaveTime;
+      }
+      if (loaded.upgrades) {
+        upgradesRef.current = loaded.upgrades;
+        for (const gen of generators) {
+          const genUpgrades = loaded.upgrades.get(gen.name);
+          if (genUpgrades) {
+            gen.applyUpgrades(genUpgrades.speedRank, genUpgrades.productionRank);
+          }
+        }
       }
       setLastSaveTime(loaded.lastSaveTime ?? null);
       const elapsed = Date.now() - (loaded.lastSaveTime || Date.now());
@@ -322,6 +474,12 @@ export function GameProvider({ children }) {
     showFps,
     setShowFps,
     lastSaveTime,
+    buyUpgrade,
+    getUpgradesDisplay,
+    UPGRADE_TYPES,
+    getScribeMilestonesDisplay,
+    claimScribeMilestone,
+    doPrestige,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

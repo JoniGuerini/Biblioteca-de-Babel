@@ -168,6 +168,72 @@ button {
   flex-shrink: 0;
 }
 
+/* Barra de progresso de prestígio */
+.prestige-progress-container {
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.prestige-progress-bar {
+  height: 1.75rem;
+  background: linear-gradient(180deg, var(--parchment-2) 0%, var(--parchment-3) 100%);
+  overflow: hidden;
+  border: 1px solid var(--parchment-dark);
+  position: relative;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 4px var(--shadow-soft);
+}
+
+.prestige-progress-fill {
+  height: 100%;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--sepia) 50%, var(--accent) 100%);
+  transition: width 0.3s ease-out;
+}
+
+.prestige-progress-info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+  pointer-events: none;
+}
+
+.prestige-progress-info-dark {
+  color: var(--ink);
+}
+
+.prestige-progress-info-light {
+  color: var(--parchment-1);
+}
+
+.prestige-progress-percent {
+  font-family: var(--font-display);
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.prestige-progress-text {
+  letter-spacing: 0.08em;
+  font-family: var(--font-display);
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+}
+
+.prestige-progress-eta {
+  font-family: var(--font-display);
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
 .header-counter {
   flex-shrink: 0;
   width: 140px;
@@ -421,6 +487,29 @@ button {
   transition: width 0.1s linear;
 }
 
+.generator-progress-continuous {
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--parchment-3) 0%,
+    var(--parchment-1) 25%,
+    var(--parchment-3) 50%,
+    var(--parchment-1) 75%,
+    var(--parchment-3) 100%
+  );
+  background-size: 200% 100%;
+  animation: progress-flow 1s linear infinite;
+}
+
+@keyframes progress-flow {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 .generator-footer {
   display: flex;
   justify-content: space-between;
@@ -527,6 +616,156 @@ button {
   color: var(--ink-faded);
   font-style: italic;
   font-size: var(--text-base);
+}
+
+/* ─── Sistema de Melhorias ────────────────────────────────────────────────── */
+.upgrades-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--parchment-dark) transparent;
+}
+
+.upgrades-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.upgrades-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.upgrades-panel::-webkit-scrollbar-thumb {
+  background: var(--parchment-dark);
+  border-radius: 4px;
+}
+
+.upgrades-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--ink-faded);
+  font-size: var(--text-base);
+}
+
+.upgrades-empty p {
+  margin: 0.5rem 0;
+}
+
+.upgrades-hint {
+  font-style: italic;
+  font-size: var(--text-sm);
+}
+
+.upgrades-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  padding: 0.25rem;
+}
+
+.upgrade-card {
+  background: linear-gradient(180deg, var(--parchment-2) 0%, var(--parchment-3) 100%);
+  border: 1px solid var(--parchment-dark);
+  padding: 1rem;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 8px var(--shadow-soft);
+}
+
+.upgrade-card-header {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--parchment-dark);
+}
+
+.upgrade-generator-name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.upgrade-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.upgrade-option {
+  background: linear-gradient(180deg, var(--parchment-1) 0%, var(--parchment-2) 100%);
+  border: 1px solid var(--parchment-4);
+  padding: 0.75rem;
+}
+
+.upgrade-option-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.upgrade-type-label {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.upgrade-rank {
+  font-size: var(--text-sm);
+  color: var(--ink-faded);
+  font-style: italic;
+}
+
+.upgrade-current {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  margin-bottom: 0.5rem;
+}
+
+.upgrade-current strong {
+  color: var(--ink);
+}
+
+.upgrade-arrow {
+  color: var(--accent);
+}
+
+.upgrade-btn {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--sepia) 50%, var(--accent) 100%);
+  border: 1px solid var(--ink-soft);
+  color: var(--parchment-1);
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px var(--shadow-soft);
+}
+
+.upgrade-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--sepia-light) 0%, var(--accent) 50%, var(--sepia-light) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px var(--shadow-soft);
+}
+
+.upgrade-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upgrade-btn-cost {
+  display: block;
 }
 
 /* ─── Diálogos — Pop-ups estilo manuscrito ────────────────────────────────── */
@@ -861,6 +1100,327 @@ button {
   right: 1rem;
   margin-left: 0;
   margin-right: -6px;
+}
+
+/* ─── Sistema de Marcos de Escribas ───────────────────────────────────────── */
+.scribe-milestones-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--parchment-dark) transparent;
+}
+
+.scribe-milestones-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scribe-milestones-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scribe-milestones-panel::-webkit-scrollbar-thumb {
+  background: var(--parchment-dark);
+  border-radius: 4px;
+}
+
+.scribe-milestones-container {
+  padding: 0.25rem;
+}
+
+.scribe-milestones-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--parchment-dark);
+}
+
+.scribe-milestones-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+  margin: 0 0 0.5rem;
+}
+
+.scribe-milestones-description {
+  font-size: var(--text-base);
+  color: var(--ink-faded);
+  font-style: italic;
+  margin: 0 0 1rem;
+}
+
+.scribe-current-rate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.scribe-rate-label {
+  font-size: var(--text-base);
+  color: var(--ink-soft);
+}
+
+.scribe-rate-value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.scribe-rate-warning {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.scribe-milestone-single {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 0;
+}
+
+.scribe-milestone-card {
+  background: linear-gradient(180deg, var(--parchment-2) 0%, var(--parchment-3) 100%);
+  border: 1px solid var(--parchment-dark);
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 2px 8px var(--shadow-soft);
+  position: relative;
+  min-width: 280px;
+  max-width: 360px;
+  text-align: center;
+}
+
+.scribe-milestone-card.next {
+  border-color: var(--accent);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 16px var(--shadow-soft),
+    0 0 0 2px var(--accent);
+}
+
+.scribe-milestone-card.completed {
+  color: var(--ink-faded);
+  font-style: italic;
+}
+
+.scribe-milestone-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.scribe-milestone-number {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.scribe-milestone-bonus {
+  font-size: var(--text-xl);
+  color: var(--accent);
+  font-weight: 600;
+  font-family: var(--font-display);
+}
+
+.scribe-milestone-cost {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  text-align: center;
+  padding: 0.25rem 0;
+}
+
+.scribe-milestone-cost .affordable {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.scribe-milestone-pending {
+  font-size: var(--text-sm);
+  color: var(--accent-gold);
+  font-weight: 500;
+  padding: 0.35rem 0.5rem;
+  background: rgba(139, 105, 20, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.scribe-milestone-btn {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  background: linear-gradient(180deg, var(--accent) 0%, var(--sepia) 50%, var(--accent) 100%);
+  border: 1px solid var(--ink-soft);
+  color: var(--parchment-1);
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 2px 4px var(--shadow-soft);
+}
+
+.scribe-milestone-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--sepia-light) 0%, var(--accent) 50%, var(--sepia-light) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px var(--shadow-soft);
+}
+
+.scribe-milestone-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+.scribe-milestones-summary {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--parchment-dark);
+  text-align: center;
+}
+
+.scribe-milestones-summary p {
+  margin: 0.25rem 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+
+.scribe-milestones-summary strong {
+  color: var(--ink);
+  font-family: var(--font-display);
+}
+
+/* ─── Sistema de Prestígio ────────────────────────────────────────────────── */
+.prestige-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.5rem 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.prestige-panel-container {
+  padding: 1rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.prestige-card {
+  background: linear-gradient(180deg, var(--parchment-2) 0%, var(--parchment-3) 100%);
+  border: 2px solid var(--accent-gold);
+  padding: 2rem;
+  min-width: 320px;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 4px 24px var(--shadow-soft),
+    0 0 0 1px rgba(139, 105, 20, 0.3);
+}
+
+.prestige-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.prestige-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--accent-gold);
+  margin: 0 0 0.5rem;
+}
+
+.prestige-description {
+  font-size: var(--text-sm);
+  color: var(--ink-faded);
+  font-style: italic;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.prestige-status {
+  display: flex;
+  justify-content: space-around;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(139, 105, 20, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+.prestige-current-points,
+.prestige-progress-display {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.prestige-label {
+  font-size: 0.7rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.prestige-value {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--accent-gold);
+}
+
+.prestige-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  background: linear-gradient(180deg, var(--accent-gold) 0%, var(--accent-gold-light) 50%, var(--accent-gold) 100%);
+  border: 1px solid var(--ink-soft);
+  color: var(--parchment-1);
+  cursor: pointer;
+  transition: all var(--transition);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px var(--shadow-soft);
+}
+
+.prestige-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, var(--accent-gold-light) 0%, var(--accent-gold) 50%, var(--accent-gold-light) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 4px 16px var(--shadow-soft);
+  transform: translateY(-1px);
+}
+
+.prestige-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(180deg, var(--parchment-4) 0%, var(--parchment-5) 100%);
+  color: var(--ink-muted);
+}
+
+.prestige-note {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--parchment-dark);
+}
+
+.prestige-note p {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  font-style: italic;
+  margin: 0;
 }
 
 /* ─── Responsivo ─────────────────────────────────────────────────────────── */

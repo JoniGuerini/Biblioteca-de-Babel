@@ -7,7 +7,9 @@ export function GeneratorButton({ data }) {
   const cycleKeyRef = useRef(0);
 
   const progress = data.cycleProgress;
-  if (progress < prevProgressRef.current - 0.3) {
+  const isFastCycle = data.cycleDurationSec <= 1;
+  
+  if (!isFastCycle && progress < prevProgressRef.current - 0.3) {
     cycleKeyRef.current += 1;
   }
   prevProgressRef.current = progress;
@@ -17,6 +19,8 @@ export function GeneratorButton({ data }) {
     : data.prevName
       ? `${data.cost} Letras + ${data.prevRequired} ${data.prevName} + ${data.scribesRequired} Escribas`
       : `${data.cost} Letras + ${data.scribesRequired} Escribas`;
+
+  const hasCount = parseFloat(data.count) > 0;
 
   return (
     <button
@@ -37,15 +41,28 @@ export function GeneratorButton({ data }) {
               <div className="generator-flavor">{data.flavorText}</div>
             )}
             <div className="generator-stats generator-cycle-row">
-              <span>{data.cycleDurationSec}s</span>
-              <span>{data.totalPerCycle} {data.outputName}</span>
+              {isFastCycle ? (
+                <>
+                  <span></span>
+                  <span>{data.perSecond} {data.outputName}/s</span>
+                </>
+              ) : (
+                <>
+                  <span>{data.cycleDurationSec}s</span>
+                  <span>{data.totalPerCycle} {data.outputName}</span>
+                </>
+              )}
             </div>
             <div className="generator-progress-bar">
-              <div
-                key={cycleKeyRef.current}
-                className="generator-progress-fill"
-                style={{ width: `${progress * 100}%` }}
-              />
+              {isFastCycle && hasCount ? (
+                <div className="generator-progress-fill generator-progress-continuous" />
+              ) : (
+                <div
+                  key={cycleKeyRef.current}
+                  className="generator-progress-fill"
+                  style={{ width: `${progress * 100}%` }}
+                />
+              )}
             </div>
             <div className="generator-footer">
               <span className={`generator-cost ${!data.purchaseLocked && !data.canAfford ? 'generator-cost-insufficient' : ''}`}>

@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useGameLoop } from '../hooks/useGameLoop';
 import { useGameState } from '../hooks/useGameState';
-import { LetterCounter } from './LetterCounter';
+import { LetterCounter, PrestigeProgressBar } from './LetterCounter';
 import { BuyModeToggle } from './BuyModeToggle';
 import { GeneratorsList } from './GeneratorsList';
+import { UpgradesList } from './UpgradesList';
+import { ScribeMilestonesList } from './ScribeMilestonesList';
+import { PrestigePanel } from './PrestigePanel';
 import { FpsDisplay } from './FpsDisplay';
 import { SettingsDialog } from './SettingsDialog';
 import { OfflineProgressDialog } from './OfflineProgressDialog';
 
 const TABS = [
   { id: 'geradores', label: 'Geradores' },
-  { id: 'melhorias', label: 'Melhorias' },
+  { id: 'favores', label: 'Favores' },
+  { id: 'escribas', label: 'Escribas' },
   { id: 'prestigio', label: 'Prestígio' },
 ];
 
@@ -44,6 +48,7 @@ export function Game() {
         </div>
         <BuyModeToggle />
       </header>
+      <PrestigeProgressBar />
 
       <main className="game-content">
         {activeTab === 'geradores' && (
@@ -51,14 +56,19 @@ export function Game() {
             <GeneratorsList />
           </section>
         )}
-        {activeTab === 'melhorias' && (
-          <section className="tab-panel tab-panel-placeholder">
-            <p>Sistema de melhorias em desenvolvimento.</p>
+        {activeTab === 'favores' && (
+          <section className="upgrades-panel">
+            <UpgradesList />
+          </section>
+        )}
+        {activeTab === 'escribas' && (
+          <section className="scribe-milestones-panel">
+            <ScribeMilestonesList />
           </section>
         )}
         {activeTab === 'prestigio' && (
-          <section className="tab-panel tab-panel-placeholder">
-            <p>Sistema de prestígio em desenvolvimento.</p>
+          <section className="prestige-panel">
+            <PrestigePanel />
           </section>
         )}
       </main>
