@@ -350,12 +350,15 @@ button {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .generators-panel {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  height: 100%;
+  overflow-y: auto;
   padding: 0.5rem 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -363,11 +366,6 @@ button {
 
 .generators-panel::-webkit-scrollbar {
   display: none;
-}
-
-.generators-panel::-webkit-scrollbar-thumb {
-  background: var(--parchment-dark);
-  border-radius: 4px;
 }
 
 /* ─── Grid de geradores — Cartas de pergaminho ────────────────────────────── */
@@ -618,7 +616,8 @@ button {
 .upgrades-panel {
   flex: 1 1 auto;
   min-height: 0;
-  overflow: auto;
+  height: 100%;
+  overflow-y: auto;
   padding: 0.5rem 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
