@@ -430,7 +430,7 @@ export function GameProvider({ children }) {
       if (loaded.lastSaveTime) {
         stateRef.current.lastActiveTime = loaded.lastSaveTime;
       }
-      if (loaded.upgrades) {
+      if (loaded.upgrades && loaded.upgrades.size > 0) {
         upgradesRef.current = loaded.upgrades;
         for (const gen of generators) {
           const genUpgrades = loaded.upgrades.get(gen.name);
@@ -438,6 +438,8 @@ export function GameProvider({ children }) {
             gen.applyUpgrades(genUpgrades.speedRank, genUpgrades.productionRank);
           }
         }
+      } else {
+        upgradesRef.current = createUpgradesState(generators);
       }
       setLastSaveTime(loaded.lastSaveTime ?? null);
       const elapsed = Date.now() - (loaded.lastSaveTime || Date.now());
