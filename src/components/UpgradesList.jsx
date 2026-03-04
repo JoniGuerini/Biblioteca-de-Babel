@@ -1,8 +1,8 @@
 import { useGameState } from '../hooks/useGameState';
 
-export function UpgradesList() {
+export function UpgradesList({ productionLine = 'letters' }) {
   const { getUpgradesDisplay, buyUpgrade, UPGRADE_TYPES } = useGameState();
-  const upgrades = getUpgradesDisplay();
+  const upgrades = getUpgradesDisplay(productionLine);
 
   const availableUpgrades = upgrades.filter(u => u.hasGenerator);
 
@@ -43,7 +43,7 @@ export function UpgradesList() {
                 type="button"
                 className="upgrade-btn"
                 disabled={upgrade.speed.isMaxed || !upgrade.canAffordSpeed}
-                onClick={() => buyUpgrade(upgrade.generatorName, UPGRADE_TYPES.SPEED)}
+                onClick={() => buyUpgrade(upgrade.generatorName, UPGRADE_TYPES.SPEED, productionLine)}
               >
                 {upgrade.speed.isMaxed ? (
                   'Máximo'
@@ -70,7 +70,7 @@ export function UpgradesList() {
                 type="button"
                 className="upgrade-btn"
                 disabled={!upgrade.canAffordProduction}
-                onClick={() => buyUpgrade(upgrade.generatorName, UPGRADE_TYPES.PRODUCTION)}
+                onClick={() => buyUpgrade(upgrade.generatorName, UPGRADE_TYPES.PRODUCTION, productionLine)}
               >
                 <span className="upgrade-btn-cost">{upgrade.productionCostFormatted} Favor</span>
               </button>

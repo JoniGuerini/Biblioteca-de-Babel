@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useGameLoop } from '../hooks/useGameLoop';
-import { useGameState } from '../hooks/useGameState';
+import { useGameState, LINE_CONFIG } from '../hooks/useGameState';
 import { LetterCounter, PrestigeProgressBar } from './LetterCounter';
 import { BuyModeToggle } from './BuyModeToggle';
 import { GeneratorsList } from './GeneratorsList';
@@ -20,10 +20,15 @@ const TABS = [
 
 export function Game() {
   const { fps } = useGameLoop();
-  const { resetGame, offlineGains, dismissOfflineDialog, saveGameManual, showFps, setShowFps, lastSaveTime } = useGameState();
+  const { resetGame, offlineGains, dismissOfflineDialog, saveGameManual, showFps, setShowFps, lastSaveTime, stateRef } = useGameState();
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [activeTab, setActiveTab] = useState('geradores');
+  const [activeProductionLine, setActiveProductionLine] = useState('letters');
+  
+  const prestigePoints = stateRef.current.prestigePoints || 0;
+  const unlockedLines = LINE_CONFIG.filter(line => prestigePoints >= line.prestigeRequired);
+  const hasMultipleLines = unlockedLines.length > 1;
 
   const handleResetClick = () => setShowResetDialog(true);
 
@@ -39,7 +44,7 @@ export function Game() {
     <div className="library-container">
       {showFps && <FpsDisplay fps={fps} />}
       <header className="library-header">
-        <LetterCounter />
+        <LetterCounter productionLine={activeProductionLine} />
         <div className="header-title">
           <h1>A Biblioteca de Babel</h1>
           <p className="subtitle">
@@ -47,18 +52,33 @@ export function Game() {
           </p>
         </div>
         <BuyModeToggle />
+        <PrestigeProgressBar />
       </header>
-      <PrestigeProgressBar />
+
+      {hasMultipleLines && (
+        <nav className="production-line-tabs">
+          {unlockedLines.map((line) => (
+            <button
+              key={line.id}
+              type="button"
+              className={`production-line-tab ${activeProductionLine === line.id ? 'active' : ''}`}
+              onClick={() => setActiveProductionLine(line.id)}
+            >
+              {line.label}
+            </button>
+          ))}
+        </nav>
+      )}
 
       <main className="game-content">
         {activeTab === 'geradores' && (
           <section className="generators-panel">
-            <GeneratorsList />
+            <GeneratorsList productionLine={activeProductionLine} />
           </section>
         )}
         {activeTab === 'favores' && (
           <section className="upgrades-panel">
-            <UpgradesList />
+            <UpgradesList productionLine={activeProductionLine} />
           </section>
         )}
         {activeTab === 'escribas' && (

@@ -1,16 +1,22 @@
-import { useGameState } from '../hooks/useGameState';
+import { useGameState, LINE_CONFIG } from '../hooks/useGameState';
 
-export function LetterCounter() {
+export function LetterCounter({ productionLine = 'letters' }) {
   const { displayState } = useGameState();
   const state = displayState.current;
+  
+  const lineConfig = LINE_CONFIG.find(l => l.id === productionLine);
+  const lineData = state.lines?.[productionLine] || {};
+  const resourceLabel = lineData.label || lineConfig?.label || 'Letras';
+  const resourceValue = lineData.resource || '0';
+  const productionRate = lineData.productionRate || '0';
 
   return (
     <div className="header-counters">
       <div className="header-counter">
-        <span className="counter-label">Letras</span>
-        <div className="letter-counter">{state.letters}</div>
+        <span className="counter-label">{resourceLabel}</span>
+        <div className="letter-counter">{resourceValue}</div>
         <p className="production-rate">
-          Produção: <span>{state.productionRate}</span>/s
+          Produção: <span>{productionRate}</span>/s
         </p>
       </div>
       <div className="header-counter">
@@ -22,7 +28,7 @@ export function LetterCounter() {
       </div>
       <div className="header-counter">
         <span className="counter-label">Favor</span>
-        <div className="letter-counter">{state.favor ?? '0'}</div>
+        <div className="letter-counter">{state.favor || '0'}</div>
         <p className="production-rate">
           Marcos atingidos nos geradores
         </p>

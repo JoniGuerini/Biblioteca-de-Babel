@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useGameState } from '../hooks/useGameState';
 import { formatBigNumber } from '../game/format';
 
-export function GeneratorButton({ data }) {
+export function GeneratorButton({ data, productionLine = 'letters' }) {
   const { buyGenerator, buyMode } = useGameState();
   const prevProgressRef = useRef(0);
   const cycleKeyRef = useRef(0);
@@ -14,6 +14,8 @@ export function GeneratorButton({ data }) {
     cycleKeyRef.current += 1;
   }
   prevProgressRef.current = progress;
+
+  const resourceName = data.resourceName || 'Letras';
 
   const renderCost = () => {
     if (data.purchaseLocked && data.producerName) {
@@ -27,7 +29,7 @@ export function GeneratorButton({ data }) {
     if (data.prevName) {
       return (
         <>
-          <span className={lettersClass}>{data.cost} Letras</span>
+          <span className={lettersClass}>{data.cost} {resourceName}</span>
           {' + '}
           <span className={prevClass}>{data.prevRequired} {data.prevName}</span>
           {' + '}
@@ -38,7 +40,7 @@ export function GeneratorButton({ data }) {
 
     return (
       <>
-        <span className={lettersClass}>{data.cost} Letras</span>
+        <span className={lettersClass}>{data.cost} {resourceName}</span>
         {' + '}
         <span className={scribesClass}>{data.scribesRequired} Escribas</span>
       </>
@@ -51,7 +53,7 @@ export function GeneratorButton({ data }) {
     <button
       type="button"
       className="generator-btn"
-      onClick={() => buyGenerator(data.name)}
+      onClick={() => buyGenerator(data.name, productionLine)}
       disabled={data.disabled || data.isLocked}
     >
       <div className="generator-info">

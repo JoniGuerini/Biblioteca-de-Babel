@@ -40,26 +40,12 @@ export function processOfflineWithBreakdown(gameState, elapsedMs) {
   return { lettersProduced, generatorProduced, scribesProduced };
 }
 
-export function updateProduction(gameState, deltaTime) {
+function updateGeneratorLine(generators, resource, cycleProgressMap, accumulatorsMap, deltaTime) {
   const generatorGains = new Map();
-  let lettersProduced = new Decimal(0);
-  const newCycleProgress = new Map(gameState.generatorCycleProgress || []);
+  let resourceProduced = new Decimal(0);
+  const newCycleProgress = new Map(cycleProgressMap || []);
 
-  const palavras = gameState.generators.find(g => g.level === 1);
-  const hasPalavras = palavras && palavras.count.gte(1);
-  const claimedScribeMilestones = gameState.claimedScribeMilestones || 0;
-  const scribeUpgradeRank = gameState.scribeUpgradeRank || 0;
-  const scribesPerSecond = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras, scribeUpgradeRank);
-  
-  // Acumula tempo para produzir escribas apenas a cada segundo completo
-  const prevAccumulator = gameState.scribeAccumulator || 0;
-  const scribeAccumulator = prevAccumulator + deltaTime;
-  const completeSeconds = Math.floor(scribeAccumulator / 1000);
-  const newScribeAccumulator = scribeAccumulator % 1000;
-  const scribesGain = new Decimal(completeSeconds).mul(scribesPerSecond);
-  const newScribes = (gameState.scribes || new Decimal(0)).plus(scribesGain);
-
-  for (const gen of gameState.generators) {
+  for (const gen of generators) {
     const cycleProgress = newCycleProgress.get(gen.name) ?? 0;
     const result = gen.produce(deltaTime, cycleProgress);
     if (!result) continue;
@@ -69,7 +55,7 @@ export function updateProduction(gameState, deltaTime) {
     if (result.amount.lte(0)) continue;
 
     if (result.type === 'letters') {
-      lettersProduced = lettersProduced.plus(result.amount);
+      resourceProduced = resourceProduced.plus(result.amount);
     } else if (result.type === 'generator') {
       const key = result.generator.name;
       const current = generatorGains.get(key) || new Decimal(0);
@@ -77,12 +63,11 @@ export function updateProduction(gameState, deltaTime) {
     }
   }
 
-  const newLetters = gameState.letters.plus(lettersProduced);
-
-  const newAccumulators = new Map(gameState.generatorAccumulators);
+  const newResource = resource.plus(resourceProduced);
+  const newAccumulators = new Map(accumulatorsMap);
 
   for (const [name, amount] of generatorGains) {
-    const gen = gameState.generators.find(g => g.name === name);
+    const gen = generators.find(g => g.name === name);
     if (gen && amount.gt(0)) {
       const prevAcc = newAccumulators.get(name) || new Decimal(0);
       const total = prevAcc.plus(amount);
@@ -97,12 +82,61 @@ export function updateProduction(gameState, deltaTime) {
   }
 
   return {
-    letters: newLetters,
-    generatorCycleProgress: newCycleProgress,
-    generatorAccumulators: newAccumulators,
+    resource: newResource,
+    cycleProgress: newCycleProgress,
+    accumulators: newAccumulators,
+  };
+}
+
+export function updateProduction(gameState, deltaTime) {
+  const palavras = gameState.generators.find(g => g.level === 1);
+  const hasPalavras = palavras && palavras.count.gte(1);
+  const claimedScribeMilestones = gameState.claimedScribeMilestones || 0;
+  const scribeUpgradeRank = gameState.scribeUpgradeRank || 0;
+  const scribesPerSecond = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras, scribeUpgradeRank);
+  
+  const prevAccumulator = gameState.scribeAccumulator || 0;
+  const scribeAccumulator = prevAccumulator + deltaTime;
+  const completeSeconds = Math.floor(scribeAccumulator / 1000);
+  const newScribeAccumulator = scribeAccumulator % 1000;
+  const scribesGain = new Decimal(completeSeconds).mul(scribesPerSecond);
+  const newScribes = (gameState.scribes || new Decimal(0)).plus(scribesGain);
+
+  const lettersResult = updateGeneratorLine(
+    gameState.generators,
+    gameState.letters,
+    gameState.generatorCycleProgress,
+    gameState.generatorAccumulators,
+    deltaTime
+  );
+
+  return {
+    letters: lettersResult.resource,
+    generatorCycleProgress: lettersResult.cycleProgress,
+    generatorAccumulators: lettersResult.accumulators,
     scribes: newScribes,
     scribeAccumulator: newScribeAccumulator,
   };
+}
+
+export function updateSymbolProduction(gameState, deltaTime) {
+  const symbolsResult = updateGeneratorLine(
+    gameState.symbolGenerators,
+    gameState.symbols || new Decimal(0),
+    gameState.symbolCycleProgress,
+    gameState.symbolAccumulators,
+    deltaTime
+  );
+
+  return {
+    symbols: symbolsResult.resource,
+    symbolCycleProgress: symbolsResult.cycleProgress,
+    symbolAccumulators: symbolsResult.accumulators,
+  };
+}
+
+export function updateLineProduction(generators, resource, cycleProgress, accumulators, deltaTime) {
+  return updateGeneratorLine(generators, resource, cycleProgress, accumulators, deltaTime);
 }
 
 export function getLettersPerSecond(generators) {

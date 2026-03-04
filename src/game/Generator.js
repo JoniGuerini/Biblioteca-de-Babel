@@ -2,9 +2,10 @@ import { Decimal } from './Decimal';
 import { getCycleMsWithUpgrade, getProductionWithUpgrade, getMaxSpeedRanks } from './upgrades';
 
 export class Generator {
-  constructor(level, name, baseCost, costMultiplier, produces, flavorText, cycleDurationMs, quantityPerCycle, minPreviousTier = 0, costPreviousTier = null, scribesRequired = null) {
+  constructor(level, name, baseCost, costMultiplier, produces, flavorText, cycleDurationMs, quantityPerCycle, minPreviousTier = 0, costPreviousTier = null, scribesRequired = null, productionLine = 'letters') {
     this.level = level;
     this.name = name;
+    this.productionLine = productionLine;
     this.scribesRequired = scribesRequired != null ? scribesRequired : level;
     this.baseCost = new Decimal(baseCost);
     this.costMultiplier = new Decimal(costMultiplier);

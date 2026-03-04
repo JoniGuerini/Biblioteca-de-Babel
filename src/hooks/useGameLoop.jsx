@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
-import { useGameState } from './useGameState';
+import { useGameState, LINE_CONFIG } from './useGameState';
+import { updateProduction, updateLineProduction } from '../game';
+import { Decimal } from '../game/Decimal';
 
 const TARGET_FPS = 60;
 const FRAME_INTERVAL = 1000 / TARGET_FPS;
 
 export function useGameLoop() {
-  const { stateRef, generatorsRef, updateProduction, updateDisplay, lastSaveTimeRef, saveGameWithTimestamp, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS } = useGameState();
+  const { stateRef, generatorsRef, updateDisplay, lastSaveTimeRef, saveGameWithTimestamp, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS } = useGameState();
   const lastFrameTimeRef = useRef(performance.now());
   const accumulatorRef = useRef(0);
   const lastUIUpdateRef = useRef(0);
@@ -32,15 +34,46 @@ export function useGameLoop() {
       }
 
       while (accumulatorRef.current >= FRAME_INTERVAL) {
-        const result = updateProduction(
-          { ...stateRef.current, generators: generatorsRef.current },
+        const state = stateRef.current;
+        const allGenerators = generatorsRef.current;
+        const prestigePoints = state.prestigePoints || 0;
+
+        const lettersResult = updateProduction(
+          { 
+            ...state, 
+            generators: allGenerators.letters,
+            letters: state.letters,
+            generatorCycleProgress: state.cycleProgress?.letters || new Map(),
+            generatorAccumulators: state.accumulators?.letters || new Map(),
+          },
           FRAME_INTERVAL
         );
-        stateRef.current.letters = result.letters;
-        stateRef.current.generatorCycleProgress = result.generatorCycleProgress;
-        stateRef.current.scribes = result.scribes;
-        stateRef.current.generatorAccumulators = result.generatorAccumulators;
-        stateRef.current.scribeAccumulator = result.scribeAccumulator;
+        state.letters = lettersResult.letters;
+        state.cycleProgress.letters = lettersResult.generatorCycleProgress;
+        state.accumulators.letters = lettersResult.generatorAccumulators;
+        state.scribes = lettersResult.scribes;
+        state.scribeAccumulator = lettersResult.scribeAccumulator;
+
+        for (let i = 1; i < LINE_CONFIG.length; i++) {
+          const lineConfig = LINE_CONFIG[i];
+          if (prestigePoints >= lineConfig.prestigeRequired) {
+            const lineId = lineConfig.id;
+            const lineGenerators = allGenerators[lineId];
+            if (!lineGenerators) continue;
+            
+            const lineResult = updateLineProduction(
+              lineGenerators,
+              state[lineId] || new Decimal(10),
+              state.cycleProgress?.[lineId] || new Map(),
+              state.accumulators?.[lineId] || new Map(),
+              FRAME_INTERVAL
+            );
+            state[lineId] = lineResult.resource;
+            state.cycleProgress[lineId] = lineResult.cycleProgress;
+            state.accumulators[lineId] = lineResult.accumulators;
+          }
+        }
+
         accumulatorRef.current -= FRAME_INTERVAL;
       }
 
@@ -60,7 +93,7 @@ export function useGameLoop() {
 
     rafId = requestAnimationFrame(gameLoop);
     return () => cancelAnimationFrame(rafId);
-  }, [stateRef, generatorsRef, updateProduction, updateDisplay, lastSaveTimeRef, saveGameWithTimestamp, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS]);
+  }, [stateRef, generatorsRef, updateDisplay, lastSaveTimeRef, saveGameWithTimestamp, forceUpdate, SAVE_INTERVAL_MS, UI_UPDATE_INTERVAL_MS]);
 
   return { fps };
 }

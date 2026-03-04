@@ -10,29 +10,49 @@ import { Decimal } from './Decimal';
 export const INFINITY_LIMIT = new Decimal('1e33');
 
 /**
- * Calcula a porcentagem do progresso até o limite infinito
- * Escala linear: porcentagem real de letras / limite
+ * Soma todos os recursos base das linhas de produção
+ * @param {Decimal[]} resources - Array de recursos (letters, symbols, etc.)
+ * @returns {Decimal} Soma total
  */
-export function getPrestigeProgress(letters) {
-  if (!letters || letters.lte(0)) return 0;
-  if (letters.gte(INFINITY_LIMIT)) return 1;
+export function getTotalResources(...resources) {
+  let total = new Decimal(0);
+  for (const resource of resources) {
+    if (resource && resource.gt && resource.gt(0)) {
+      total = total.add(resource);
+    }
+  }
+  return total;
+}
+
+/**
+ * Calcula a porcentagem do progresso até o limite infinito
+ * Escala linear: porcentagem real de recursos totais / limite
+ * @param {Decimal[]} resources - Array de recursos base das linhas de produção
+ */
+export function getPrestigeProgress(...resources) {
+  const total = getTotalResources(...resources);
+  if (total.lte(0)) return 0;
+  if (total.gte(INFINITY_LIMIT)) return 1;
   
-  const progress = letters.div(INFINITY_LIMIT).toNumber();
+  const progress = total.div(INFINITY_LIMIT).toNumber();
   return Math.min(1, Math.max(0, progress));
 }
 
 /**
  * Verifica se o jogador pode fazer prestígio
+ * @param {Decimal[]} resources - Array de recursos base das linhas de produção
  */
-export function canPrestige(letters) {
-  return letters.gte(INFINITY_LIMIT);
+export function canPrestige(...resources) {
+  const total = getTotalResources(...resources);
+  return total.gte(INFINITY_LIMIT);
 }
 
 /**
  * Formata o progresso para exibição
+ * @param {Decimal[]} resources - Array de recursos base das linhas de produção
  */
-export function formatPrestigeProgress(letters) {
-  const progress = getPrestigeProgress(letters);
+export function formatPrestigeProgress(...resources) {
+  const progress = getPrestigeProgress(...resources);
   return (progress * 100).toFixed(2) + '%';
 }
 
@@ -105,18 +125,18 @@ function formatTime(totalSeconds) {
 
 /**
  * Calcula o tempo estimado para atingir o infinito
- * Tempo = (Limite - Letras atuais) / Produção por segundo
- * @param {Decimal} letters - Letras atuais
- * @param {Decimal} lettersPerSecond - Taxa de produção por segundo
+ * Tempo = (Limite - Total atual) / Produção total por segundo
+ * @param {Decimal} totalResources - Total de recursos
+ * @param {Decimal} totalProductionPerSecond - Taxa de produção total por segundo
  * @returns {string} Tempo formatado ou null se não aplicável
  */
-export function getEstimatedTimeToInfinity(letters, lettersPerSecond) {
-  if (!letters || letters.lte(0)) return null;
-  if (!lettersPerSecond || lettersPerSecond.lte(0)) return '∞';
-  if (letters.gte(INFINITY_LIMIT)) return 'Completo!';
+export function getEstimatedTimeToInfinity(totalResources, totalProductionPerSecond) {
+  if (!totalResources || totalResources.lte(0)) return null;
+  if (!totalProductionPerSecond || totalProductionPerSecond.lte(0)) return '∞';
+  if (totalResources.gte(INFINITY_LIMIT)) return 'Completo!';
   
-  const remaining = INFINITY_LIMIT.sub(letters);
-  const secondsRemaining = remaining.div(lettersPerSecond);
+  const remaining = INFINITY_LIMIT.sub(totalResources);
+  const secondsRemaining = remaining.div(totalProductionPerSecond);
   
   const seconds = secondsRemaining.toNumber();
   
@@ -127,15 +147,21 @@ export function getEstimatedTimeToInfinity(letters, lettersPerSecond) {
 
 /**
  * Retorna informações do prestígio para a UI
+ * @param {Decimal[]} resources - Array de recursos base das linhas de produção
+ * @param {number} prestigePoints - Pontos de prestígio atuais
+ * @param {Decimal[]} productionRates - Array de taxas de produção por segundo
  */
-export function getPrestigeInfo(letters, prestigePoints, lettersPerSecond) {
-  const progress = getPrestigeProgress(letters);
-  const canDoPrestige = canPrestige(letters);
-  const estimatedTime = getEstimatedTimeToInfinity(letters, lettersPerSecond);
+export function getPrestigeInfo(resources, prestigePoints, productionRates) {
+  const totalResources = getTotalResources(...resources);
+  const totalProduction = getTotalResources(...productionRates);
+  
+  const progress = getPrestigeProgress(...resources);
+  const canDoPrestige = canPrestige(...resources);
+  const estimatedTime = getEstimatedTimeToInfinity(totalResources, totalProduction);
   
   return {
     progress,
-    progressPercent: formatPrestigeProgress(letters),
+    progressPercent: formatPrestigeProgress(...resources),
     canPrestige: canDoPrestige,
     currentPoints: prestigePoints,
     nextPoints: prestigePoints + 1,

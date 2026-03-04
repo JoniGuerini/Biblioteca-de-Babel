@@ -26,9 +26,10 @@ export function getFavorForMilestone(milestoneIndex) {
  * @param {import('./Generator').Generator[]} generators
  * @param {Decimal} favor - quantidade atual de Favores
  * @param {Map<string, number>} generatorMilestones - genName -> índice do último marco concedido (0-based)
+ * @param {number} favorMultiplier - multiplicador de Favor (padrão: 1)
  * @returns {{ favor: Decimal, generatorMilestones: Map<string, number> }}
  */
-export function processMilestones(generators, favor, generatorMilestones) {
+export function processMilestones(generators, favor, generatorMilestones, favorMultiplier = 1) {
   let newFavor = favor instanceof Decimal ? favor : new Decimal(favor);
   const newMap = new Map(generatorMilestones || []);
 
@@ -40,7 +41,7 @@ export function processMilestones(generators, favor, generatorMilestones) {
     for (let i = lastIndex; i < MILESTONE_THRESHOLDS.length; i++) {
       const threshold = MILESTONE_THRESHOLDS[i];
       if (count.gte(threshold)) {
-        const favorGained = getFavorForMilestone(i);
+        const favorGained = getFavorForMilestone(i) * favorMultiplier;
         newFavor = newFavor.add(favorGained);
         newMap.set(gen.name, i);
       } else {
