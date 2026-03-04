@@ -9,6 +9,7 @@ import {
   isPurchaseLocked,
   getProducerName,
   formatBigNumber,
+  formatInteger,
   saveGame,
   loadGame,
   clearSave,
@@ -128,7 +129,7 @@ export function GameProvider({ children }) {
     const prestigeInfo = getPrestigeInfo(state.letters, state.prestigePoints || 0, lettersPerSec);
     displayStateRef.current = {
       letters: formatBigNumber(state.letters),
-      scribes: formatBigNumber(state.scribes || new Decimal(0)),
+      scribes: formatInteger(state.scribes || new Decimal(0)),
       favor: formatBigNumber(favor),
       scribesProductionRate: scribesPerSec,
       productionRate: formatBigNumber(lettersPerSec),

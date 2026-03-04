@@ -4,15 +4,16 @@ import { Decimal } from './Decimal';
  * Sistema de Marcos de Escribas
  * 
  * O jogador pode trocar letras por aumentos permanentes na produção de escribas.
- * Cada marco custa 10x mais que o anterior.
+ * Cada marco custa 1000x mais que o anterior (pula 3 casas decimais).
+ * Progressão: 500 → 5k → 5M → 5B → 5T → ...
  * Começa em 500 letras para +1 escriba/s.
  */
 
 const BASE_COST = 500;
-const COST_MULTIPLIER = 10;
+const COST_MULTIPLIER = 1000;
 const BONUS_PER_MILESTONE = 1;
 
-const SCRIBE_UPGRADE_BASE_COST = 5;
+const SCRIBE_UPGRADE_BASE_COST = 1;
 const SCRIBE_UPGRADE_COST_MULTIPLIER = 2;
 
 /**

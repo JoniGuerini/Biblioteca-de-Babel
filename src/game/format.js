@@ -29,7 +29,7 @@ export function formatBigNumber(value) {
   return d.toStringWithDecimalPlaces(2);
 }
 
-/** Formata número como inteiro (sem decimais). Usado para Escribas. */
+/** Formata número como inteiro (arredondado para baixo, com sufixo e decimais). */
 export function formatInteger(value) {
   if (!value || (value.eq && value.eq(0))) return '0';
   const d = value instanceof Decimal ? value : new Decimal(value);
@@ -38,6 +38,7 @@ export function formatInteger(value) {
   const magnitude = Math.floor(floored.log10().toNumber() / 3);
   const suffixIndex = Math.min(magnitude, FORMAT_SUFFIXES.length - 1);
   const divisor = Decimal.pow(10, suffixIndex * 3);
-  const scaled = floored.div(divisor).floor();
-  return scaled.toString() + FORMAT_SUFFIXES[suffixIndex];
+  const scaled = floored.div(divisor);
+  const formatted = scaled.toFixed(1).replace(/\.0$/, '');
+  return formatted + FORMAT_SUFFIXES[suffixIndex];
 }
