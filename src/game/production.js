@@ -21,6 +21,7 @@ export function processOfflineWithBreakdown(gameState, elapsedMs) {
     gameState.generatorCycleProgress = result.generatorCycleProgress;
     gameState.generatorAccumulators = result.generatorAccumulators;
     gameState.scribes = result.scribes;
+    gameState.scribeAccumulator = result.scribeAccumulator;
     remaining -= chunk;
   }
 
@@ -49,7 +50,13 @@ export function updateProduction(gameState, deltaTime) {
   const claimedScribeMilestones = gameState.claimedScribeMilestones || 0;
   const scribeUpgradeRank = gameState.scribeUpgradeRank || 0;
   const scribesPerSecond = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras, scribeUpgradeRank);
-  const scribesGain = new Decimal(deltaTime / 1000).mul(scribesPerSecond);
+  
+  // Acumula tempo para produzir escribas apenas a cada segundo completo
+  const prevAccumulator = gameState.scribeAccumulator || 0;
+  const scribeAccumulator = prevAccumulator + deltaTime;
+  const completeSeconds = Math.floor(scribeAccumulator / 1000);
+  const newScribeAccumulator = scribeAccumulator % 1000;
+  const scribesGain = new Decimal(completeSeconds).mul(scribesPerSecond);
   const newScribes = (gameState.scribes || new Decimal(0)).plus(scribesGain);
 
   for (const gen of gameState.generators) {
@@ -94,6 +101,7 @@ export function updateProduction(gameState, deltaTime) {
     generatorCycleProgress: newCycleProgress,
     generatorAccumulators: newAccumulators,
     scribes: newScribes,
+    scribeAccumulator: newScribeAccumulator,
   };
 }
 

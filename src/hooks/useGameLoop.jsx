@@ -40,6 +40,7 @@ export function useGameLoop() {
         stateRef.current.generatorCycleProgress = result.generatorCycleProgress;
         stateRef.current.scribes = result.scribes;
         stateRef.current.generatorAccumulators = result.generatorAccumulators;
+        stateRef.current.scribeAccumulator = result.scribeAccumulator;
         accumulatorRef.current -= FRAME_INTERVAL;
       }
 

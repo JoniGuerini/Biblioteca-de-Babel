@@ -125,7 +125,8 @@ export function GameProvider({ children }) {
     const palavras = generators.find(g => g.level === 1);
     const hasPalavras = palavras && palavras.count.gte(1);
     const claimedScribeMilestones = state.claimedScribeMilestones || 0;
-    const scribesPerSec = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras);
+    const scribeUpgradeRank = state.scribeUpgradeRank || 0;
+    const scribesPerSec = getTotalScribesPerSecond(claimedScribeMilestones, hasPalavras, scribeUpgradeRank);
     const prestigeInfo = getPrestigeInfo(state.letters, state.prestigePoints || 0, lettersPerSec);
     displayStateRef.current = {
       letters: formatBigNumber(state.letters),
@@ -233,6 +234,7 @@ export function GameProvider({ children }) {
       generatorMilestones: new Map(),
       claimedScribeMilestones: 0,
       scribeUpgradeRank: 0,
+      scribeAccumulator: 0,
       prestigePoints: 0,
       lastActiveTime: Date.now(),
     };
@@ -262,6 +264,7 @@ export function GameProvider({ children }) {
       generatorMilestones: new Map(),
       claimedScribeMilestones: 0,
       scribeUpgradeRank: 0,
+      scribeAccumulator: 0,
       prestigePoints: currentPrestigePoints + 1,
       lastActiveTime: Date.now(),
     };
@@ -429,6 +432,7 @@ export function GameProvider({ children }) {
       stateRef.current.generatorMilestones = loaded.generatorMilestones ?? new Map();
       stateRef.current.claimedScribeMilestones = loaded.claimedScribeMilestones ?? 0;
       stateRef.current.scribeUpgradeRank = loaded.scribeUpgradeRank ?? 0;
+      stateRef.current.scribeAccumulator = loaded.scribeAccumulator ?? 0;
       stateRef.current.prestigePoints = loaded.prestigePoints ?? 0;
       if (loaded.lastSaveTime) {
         stateRef.current.lastActiveTime = loaded.lastSaveTime;
