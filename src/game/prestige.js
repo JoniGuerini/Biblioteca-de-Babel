@@ -42,15 +42,43 @@ export function formatPrestigeProgress(letters) {
 function formatTime(totalSeconds) {
   if (totalSeconds < 1) return '< 1s';
   
-  const years = Math.floor(totalSeconds / 31536000);
-  const days = Math.floor((totalSeconds % 31536000) / 86400);
-  const hours = Math.floor((totalSeconds % 86400) / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = Math.floor(totalSeconds % 60);
+  const SECONDS_PER_MINUTE = 60;
+  const SECONDS_PER_HOUR = 3600;
+  const SECONDS_PER_DAY = 86400;
+  const SECONDS_PER_YEAR = 31536000;
+  const SECONDS_PER_DECADE = SECONDS_PER_YEAR * 10;
+  const SECONDS_PER_CENTURY = SECONDS_PER_YEAR * 100;
+  const SECONDS_PER_MILLENNIUM = SECONDS_PER_YEAR * 1000;
   
-  if (years >= 1e9) return `${(years / 1e9).toFixed(1)}B a`;
-  if (years >= 1e6) return `${(years / 1e6).toFixed(1)}M a`;
-  if (years >= 1000) return `${(years / 1000).toFixed(1)}mil a`;
+  const totalMillennia = totalSeconds / SECONDS_PER_MILLENNIUM;
+  
+  if (totalMillennia >= 1e9) return `${(totalMillennia / 1e9).toFixed(1)}B mil`;
+  if (totalMillennia >= 1e6) return `${(totalMillennia / 1e6).toFixed(1)}M mil`;
+  if (totalMillennia >= 1000) return `${(totalMillennia / 1000).toFixed(1)}mil mil`;
+  
+  const millennia = Math.floor(totalSeconds / SECONDS_PER_MILLENNIUM);
+  const centuries = Math.floor((totalSeconds % SECONDS_PER_MILLENNIUM) / SECONDS_PER_CENTURY);
+  const decades = Math.floor((totalSeconds % SECONDS_PER_CENTURY) / SECONDS_PER_DECADE);
+  const years = Math.floor((totalSeconds % SECONDS_PER_DECADE) / SECONDS_PER_YEAR);
+  const days = Math.floor((totalSeconds % SECONDS_PER_YEAR) / SECONDS_PER_DAY);
+  const hours = Math.floor((totalSeconds % SECONDS_PER_DAY) / SECONDS_PER_HOUR);
+  const minutes = Math.floor((totalSeconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+  const seconds = Math.floor(totalSeconds % SECONDS_PER_MINUTE);
+  
+  if (millennia > 0) {
+    if (centuries > 0) return `${millennia}mil ${centuries}séc`;
+    return `${millennia}mil`;
+  }
+  
+  if (centuries > 0) {
+    if (decades > 0) return `${centuries}séc ${decades}déc`;
+    return `${centuries}séc`;
+  }
+  
+  if (decades > 0) {
+    if (years > 0) return `${decades}déc ${years}a`;
+    return `${decades}déc`;
+  }
   
   if (years > 0) {
     if (days > 0) return `${years}a ${days}d`;
